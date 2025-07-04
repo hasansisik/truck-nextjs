@@ -510,9 +510,9 @@ function SidebarMenuButton({
   active?: boolean
   tooltip?: string | React.ComponentProps<typeof TooltipContent>
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
-  const { state } = useSidebar()
+  const { state, isMobile } = useSidebar()
   const Comp = asChild ? Slot : "button"
-  const isActiveState = active || isActive
+  const isActiveState = active ?? isActive
 
   const button = (
     <Comp
