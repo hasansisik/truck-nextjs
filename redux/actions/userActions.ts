@@ -1,6 +1,7 @@
 import axios from "axios";
 import { createAsyncThunk, createAction } from "@reduxjs/toolkit";
 import { server } from "@/config";
+import { safeLocalStorage } from "@/lib/utils";
 
 // Clear error action
 export const clearError = createAction('user/clearError');
@@ -164,8 +165,10 @@ export const login = createAsyncThunk(
     try {
       const { data } = await axios.post(`${server}/auth/login`, payload);
       const token = data.user.token;
-      localStorage.setItem("accessToken", token);
-      document.cookie = `token=${token}; path=/; max-age=86400`; // 24 hours
+      safeLocalStorage.setItem("accessToken", token);
+      if (typeof document !== "undefined") {
+        document.cookie = `token=${token}; path=/; max-age=86400`; // 24 hours
+      }
       return data.user;
     } catch (error: any) {
       let message = error.response?.data?.message || 'Giriş yapılamadı';
@@ -184,7 +187,7 @@ export const register = createAsyncThunk(
   "user/register",
   async (payload: RegisterPayload, thunkAPI) => {
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = safeLocalStorage.getItem("accessToken");
       const { data } = await axios.post(`${server}/auth/register`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -202,14 +205,16 @@ export const logout = createAsyncThunk(
   "user/logout",
   async (_, thunkAPI) => {
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = safeLocalStorage.getItem("accessToken");
       await axios.get(`${server}/auth/logout`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      localStorage.removeItem("accessToken");
-      document.cookie = "token=; path=/; max-age=0";
+      safeLocalStorage.removeItem("accessToken");
+      if (typeof document !== "undefined") {
+        document.cookie = "token=; path=/; max-age=0";
+      }
       return null;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Çıkış yapılamadı';
@@ -222,7 +227,11 @@ export const getMyProfile = createAsyncThunk(
   "user/getMyProfile",
   async (_, thunkAPI) => {
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = safeLocalStorage.getItem("accessToken");
+      if (!token) {
+        return thunkAPI.rejectWithValue(null);
+      }
+      
       const { data } = await axios.get(`${server}/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -247,7 +256,7 @@ export const editProfile = createAsyncThunk(
   "user/editProfile",
   async (payload: EditProfilePayload, thunkAPI) => {
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = safeLocalStorage.getItem("accessToken");
       const { data } = await axios.put(`${server}/auth/profile`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -265,7 +274,7 @@ export const getAllUsers = createAsyncThunk(
   "user/getAllUsers",
   async (_, thunkAPI) => {
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = safeLocalStorage.getItem("accessToken");
       const { data } = await axios.get(`${server}/auth/users`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -283,7 +292,7 @@ export const editUser = createAsyncThunk(
   "user/editUser",
   async (payload: EditUserPayload, thunkAPI) => {
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = safeLocalStorage.getItem("accessToken");
       const { userId, ...userData } = payload;
       const { data } = await axios.put(`${server}/auth/users/${userId}`, userData, {
         headers: {
@@ -302,7 +311,7 @@ export const deleteUser = createAsyncThunk(
   "user/deleteUser",
   async (userId: string, thunkAPI) => {
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = safeLocalStorage.getItem("accessToken");
       await axios.delete(`${server}/auth/users/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,

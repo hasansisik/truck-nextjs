@@ -1,9 +1,9 @@
 import crypto from 'crypto';
 
 // Get Cloudinary settings from environment variables
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dbw3ozdoh";
-const API_KEY = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || "742373231915158";
-const API_SECRET = process.env.CLOUDINARY_API_SECRET || "rlJxEB-nHt5b6dIywf57q_fc0iE";
+const CLOUD_NAME =  "dbw3ozdoh";
+const API_KEY = "742373231915158";
+const API_SECRET = "rlJxEB-nHt5b6dIywf57q_fc0iE";
 
 function generateSignature(timestamp: number): string {
   const str = `timestamp=${timestamp}${API_SECRET}`;

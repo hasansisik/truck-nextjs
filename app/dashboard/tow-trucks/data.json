@@ -1,0 +1,66 @@
+[
+  {
+    "_id": "1",
+    "towTruck": "Çekici 1",
+    "driver": "Ahmet Yılmaz",
+    "licensePlate": "34ABC123",
+    "towDate": "2023-06-15T10:30:00.000Z",
+    "distance": 45.5,
+    "company": "ABC Lojistik",
+    "images": [
+      "https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg",
+      "https://res.cloudinary.com/demo/image/upload/v1312461204/sample2.jpg"
+    ],
+    "companyId": "default",
+    "userId": "admin123",
+    "createdAt": "2023-06-15T10:35:00.000Z",
+    "updatedAt": "2023-06-15T10:35:00.000Z"
+  },
+  {
+    "_id": "2",
+    "towTruck": "Çekici 2",
+    "driver": "Mehmet Demir",
+    "licensePlate": "06XYZ789",
+    "towDate": "2023-06-16T14:15:00.000Z",
+    "distance": 78.2,
+    "company": "XYZ Nakliyat",
+    "images": [
+      "https://res.cloudinary.com/demo/image/upload/v1312461204/sample3.jpg"
+    ],
+    "companyId": "default",
+    "userId": "admin123",
+    "createdAt": "2023-06-16T14:20:00.000Z",
+    "updatedAt": "2023-06-16T14:20:00.000Z"
+  },
+  {
+    "_id": "3",
+    "towTruck": "Çekici 3",
+    "driver": "Ali Kaya",
+    "licensePlate": "35DEF456",
+    "towDate": "2023-06-17T09:45:00.000Z",
+    "distance": 120.0,
+    "company": "DEF Taşımacılık",
+    "images": [],
+    "companyId": "default",
+    "userId": "admin123",
+    "createdAt": "2023-06-17T09:50:00.000Z",
+    "updatedAt": "2023-06-17T09:50:00.000Z"
+  },
+  {
+    "_id": "4",
+    "towTruck": "Çekici 4",
+    "driver": "Veli Şahin",
+    "licensePlate": "01GHI789",
+    "towDate": "2023-06-18T16:30:00.000Z",
+    "distance": 65.7,
+    "company": "GHI Kargo",
+    "images": [
+      "https://res.cloudinary.com/demo/image/upload/v1312461204/sample4.jpg",
+      "https://res.cloudinary.com/demo/image/upload/v1312461204/sample5.jpg"
+    ],
+    "companyId": "default",
+    "userId": "admin123",
+    "createdAt": "2023-06-18T16:35:00.000Z",
+    "updatedAt": "2023-06-18T16:35:00.000Z"
+  }
+] 

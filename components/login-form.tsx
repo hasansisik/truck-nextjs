@@ -54,9 +54,9 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Welcome back</CardTitle>
+          <CardTitle className="text-xl">Hoş Geldiniz</CardTitle>
           <CardDescription>
-            Login with your email and password
+            E-posta ve şifrenizle giriş yapın
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -64,11 +64,11 @@ export function LoginForm({
             <div className="grid gap-6">
               <div className="grid gap-6">
                 <div className="grid gap-3">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">E-posta</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="m@example.com"
+                    placeholder="ornek@eposta.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -77,7 +77,7 @@ export function LoginForm({
                 </div>
                 <div className="grid gap-3">
                   <div className="flex items-center">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">Şifre</Label>
                   </div>
                   <Input 
                     id="password" 
@@ -89,7 +89,7 @@ export function LoginForm({
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Giriş yapılıyor..." : "Login"}
+                  {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
                 </Button>
               </div>
             </div>
@@ -97,8 +97,8 @@ export function LoginForm({
         </CardContent>
       </Card>
       <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
+        Devam ederek <a href="#">Kullanım Şartları</a>{" "}
+        ve <a href="#">Gizlilik Politikası</a>'nı kabul etmiş olursunuz.
       </div>
     </div>
   )

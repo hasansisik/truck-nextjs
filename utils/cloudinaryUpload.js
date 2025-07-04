@@ -3,36 +3,26 @@
  * @param {File} file - The file to upload
  * @param {string} preset - The Cloudinary upload preset to use
  * @param {string} folder - The folder to upload to in Cloudinary
- * @returns {Promise<object>} - The upload response with URLs and metadata
+ * @returns {Promise<string>} - The upload response with secure URL
  */
-export async function uploadToCloudinary(file, preset = 'default_preset', folder = 'services') {
+import { uploadImageToCloudinary } from './cloudinary';
+
+export async function uploadToCloudinary(file, preset = 'truck_uploads', folder = 'tow_trucks') {
   if (!file) {
     throw new Error('No file provided');
   }
 
-  // Create form data for the upload
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', preset);
-  formData.append('folder', folder);
-
   try {
-    // You should replace 'your-cloud-name' with your actual Cloudinary cloud name
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'your-cloud-name';
-    const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
-
-    // Make the upload request
-    const response = await fetch(uploadUrl, {
-      method: 'POST',
-      body: formData
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || 'Failed to upload file');
+    // Check if file size is too large (10MB limit for Cloudinary free plan)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
+      console.error('File size too large:', file.size);
+      throw new Error(`Dosya boyutu çok büyük (maksimum 10MB): ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
     }
 
-    return await response.json();
+    // Use the TypeScript implementation for actual upload
+    const imageUrl = await uploadImageToCloudinary(file);
+    return imageUrl;
   } catch (error) {
     console.error('Cloudinary upload error:', error);
     throw error;
@@ -47,10 +37,9 @@ export async function uploadToCloudinary(file, preset = 'default_preset', folder
 export function getUploadPreset(fileType) {
   // Map file types to different presets if needed
   const presetMap = {
-    image: 'services_images',
-    icon: 'services_icons',
-    document: 'services_docs'
+    image: 'truck_images',
+    document: 'truck_docs'
   };
 
-  return presetMap[fileType] || 'services_preset';
+  return presetMap[fileType] || 'truck_uploads';
 } 
