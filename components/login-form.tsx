@@ -41,7 +41,7 @@ export function LoginForm({
       
       if (login.fulfilled.match(result)) {
         toast.success("Giriş başarılı!")
-        router.push("/dashboard")
+        router.push("/")
       } else {
         toast.error(error || "Giriş yapılırken bir hata oluştu")
       }

@@ -14,7 +14,7 @@ export default function LoginPage() {
   useEffect(() => {
     // Check if user is already authenticated
     if (isAuthenticated || safeLocalStorage.getItem("accessToken")) {
-      router.push("/dashboard")
+      router.push("/")
     }
   }, [isAuthenticated, router])
   
