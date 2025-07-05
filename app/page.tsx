@@ -22,6 +22,9 @@ import { PlusCircle, Pencil, X, Truck, Users, Building } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { safeLocalStorage } from "@/lib/utils";
+import axios from "axios";
+import { server } from "@/config";
+import { logout } from "@/redux/actions/userActions";
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
@@ -30,6 +33,8 @@ export default function HomePage() {
   const [isVehicleOpen, setIsVehicleOpen] = useState(false);
   const [isDriverOpen, setIsDriverOpen] = useState(false);
   const [isCompanyOpen, setIsCompanyOpen] = useState(false);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [isTokenValid, setIsTokenValid] = useState(false);
   
   // Form states
   const [vehicleForm, setVehicleForm] = useState({
@@ -62,14 +67,48 @@ export default function HomePage() {
   const { companies, loading: companyLoading, error: companyError } = useAppSelector(state => state.company || {});
 
   useEffect(() => {
-    // Check if user is authenticated
-    if (!isAuthenticated && !safeLocalStorage.getItem("accessToken")) {
-      router.push("/login");
-      return;
-    }
-
-    dispatch(getAllTows());
-  }, [dispatch, isAuthenticated, router]);
+    const checkAuth = async () => {
+      setIsAuthChecking(true);
+      const token = safeLocalStorage.getItem("accessToken");
+      
+      // If no token, redirect to login
+      if (!token) {
+        // Direct browser navigation instead of Next.js router
+        window.location.href = "/login";
+        return;
+      }
+      
+      // Check if token is valid by making a request to the server
+      try {
+        await axios.get(`${server}/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        // If request is successful, token is valid
+        setIsTokenValid(true);
+        setIsAuthChecking(false);
+        dispatch(getAllTows());
+      } catch (error) {
+        // If token is expired or invalid, logout and redirect to login
+        console.error("Token validation error:", error);
+        dispatch(logout());
+        safeLocalStorage.removeItem("accessToken");
+        setIsTokenValid(false);
+        setIsAuthChecking(false);
+        
+        // Direct browser navigation instead of Next.js router
+        window.location.href = "/login";
+        toast.error("Oturum süreniz doldu. Lütfen tekrar giriş yapın.", {
+          duration: 5000,
+        });
+      }
+    };
+    
+    checkAuth();
+    // Only run this effect once on component mount
+  }, []);
   
   const handleVehicleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -156,8 +195,17 @@ export default function HomePage() {
     });
   };
 
-  // If not authenticated, return null (will redirect in useEffect)
-  if (!isAuthenticated && !safeLocalStorage.getItem("accessToken")) {
+  // Show loading or redirect based on auth check
+  if (isAuthChecking) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-500">Yükleniyor...</p>
+      </div>
+    );
+  }
+  
+  // If token is invalid, don't render anything (redirect happens in useEffect)
+  if (!isTokenValid) {
     return null;
   }
 
