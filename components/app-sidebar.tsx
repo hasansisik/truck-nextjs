@@ -37,15 +37,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   
   const navItems = [
     {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: IconDashboard,
-    },
-    {
       title: "Çekici Yönetimi",
-      url: "/dashboard/tow-trucks",
+      url: "/dashboard",
       icon: IconTruckDelivery,
     },
+
     {
       title: "Araç Yönetimi",
       url: "/dashboard/vehicles",
