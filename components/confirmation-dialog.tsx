@@ -12,13 +12,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button, ButtonProps } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { VariantProps } from "class-variance-authority";
 
 interface ConfirmationDialogProps {
   title: string;
   description: string;
   triggerText: string;
-  triggerVariant?: ButtonProps["variant"];
+  triggerVariant?: "outline" | "destructive" | "ghost" | "link" | "default" | "secondary";
   confirmText?: string;
   cancelText?: string;
   onConfirm: () => void;

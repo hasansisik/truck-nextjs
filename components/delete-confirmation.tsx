@@ -20,6 +20,7 @@ interface DeleteConfirmationProps {
   description: string;
   onDelete: () => void;
   isLoading?: boolean;
+  disabled?: boolean;
   variant?: "outline" | "destructive" | "ghost" | "link" | "default" | "secondary";
   size?: "default" | "sm" | "lg" | "icon";
 }
@@ -29,13 +30,14 @@ const DeleteConfirmation = ({
   description,
   onDelete,
   isLoading = false,
+  disabled = false,
   variant = "destructive",
   size = "default",
 }: DeleteConfirmationProps) => {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant={variant} size={size} disabled={isLoading}>
+        <Button variant={variant} size={size} disabled={isLoading || disabled}>
           <Trash2 className="h-4 w-4 mr-1" /> Sil
         </Button>
       </AlertDialogTrigger>
