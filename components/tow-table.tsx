@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -10,14 +10,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Eye, Plus, X, ImageIcon } from "lucide-react";
+import { Edit, Eye, Plus, X, ImageIcon } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { deleteTow, getAllTows } from "@/redux/actions/towActions";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetClose,
+  SheetFooter
+} from "@/components/ui/sheet";
 import { TowForm } from "@/components/tow-form";
 import { TowDetail } from "@/components/tow-detail";
 import { format } from "date-fns";
 import Image from "next/image";
+import DeleteConfirmation from "./delete-confirmation";
 
 export function TowTable() {
   const dispatch = useAppDispatch();
@@ -27,6 +35,10 @@ export function TowTable() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [selectedTow, setSelectedTow] = useState<any>(null);
+
+  useEffect(() => {
+    dispatch(getAllTows());
+  }, [dispatch]);
 
   const handleEdit = (tow: any) => {
     setSelectedTow(tow);
@@ -39,10 +51,8 @@ export function TowTable() {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("Bu çekme kaydını silmek istediğinize emin misiniz?")) {
-      await dispatch(deleteTow(id));
-      dispatch(getAllTows());
-    }
+    await dispatch(deleteTow(id));
+    dispatch(getAllTows());
   };
 
   const onCreateSuccess = () => {
@@ -140,13 +150,11 @@ export function TowTable() {
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(tow._id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <DeleteConfirmation
+                        onDelete={() => handleDelete(tow._id)}
+                        title="Çekme Kaydını Sil"
+                        description="Bu çekme kaydını silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+                      />
                     </div>
                   </TableCell>
                 </TableRow>
@@ -158,14 +166,18 @@ export function TowTable() {
 
       {/* Create Form */}
       <Sheet open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <SheetContent className="w-full sm:max-w-md md:max-w-lg overflow-y-auto">
-          <SheetHeader className="border-b pb-4">
-            <div className="flex items-center justify-between">
-              <SheetTitle>Yeni Çekme Kaydı</SheetTitle>
-
-            </div>
+        <SheetContent hideCloseButton={true}>
+          <SheetHeader>
+            <SheetTitle className="flex justify-between items-center">
+              <span>Yeni Çekme Kaydı</span>
+              <SheetClose asChild>
+                <Button variant="ghost" size="icon">
+                  <X className="h-4 w-4" />
+                </Button>
+              </SheetClose>
+            </SheetTitle>
           </SheetHeader>
-          <div className="px-6 py-6 overflow-y-auto">
+          <div className="py-4 overflow-y-auto">
             <TowForm onSuccess={onCreateSuccess} />
           </div>
         </SheetContent>
@@ -173,18 +185,18 @@ export function TowTable() {
 
       {/* Edit Form */}
       <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <SheetContent className="w-full sm:max-w-md md:max-w-lg overflow-y-auto">
-          <SheetHeader className="border-b pb-4">
-            <div className="flex items-center justify-between">
-              <SheetTitle>Çekme Kaydı Düzenle</SheetTitle>
+        <SheetContent hideCloseButton={true}>
+          <SheetHeader>
+            <SheetTitle className="flex justify-between items-center">
+              <span>Çekme Kaydı Düzenle</span>
               <SheetClose asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <span className="sr-only">Kapat</span>
+                <Button variant="ghost" size="icon">
+                  <X className="h-4 w-4" />
                 </Button>
               </SheetClose>
-            </div>
+            </SheetTitle>
           </SheetHeader>
-          <div className="px-6 py-6 overflow-y-auto">
+          <div className="py-4 overflow-y-auto">
             {selectedTow && (
               <TowForm tow={selectedTow} onSuccess={onEditSuccess} />
             )}
@@ -194,19 +206,18 @@ export function TowTable() {
 
       {/* View Details */}
       <Sheet open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <SheetContent className="w-full sm:max-w-md md:max-w-lg overflow-y-auto">
-          <SheetHeader className="border-b pb-4">
-            <div className="flex items-center justify-between">
-              <SheetTitle>Çekme Kaydı Detayları</SheetTitle>
+        <SheetContent hideCloseButton={true}>
+          <SheetHeader>
+            <SheetTitle className="flex justify-between items-center">
+              <span>Çekme Kaydı Detayları</span>
               <SheetClose asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon">
                   <X className="h-4 w-4" />
-                  <span className="sr-only">Kapat</span>
                 </Button>
               </SheetClose>
-            </div>
+            </SheetTitle>
           </SheetHeader>
-          <div className="px-6 py-6 overflow-y-auto">
+          <div className="py-4 overflow-y-auto">
             {selectedTow && <TowDetail tow={selectedTow} />}
           </div>
         </SheetContent>

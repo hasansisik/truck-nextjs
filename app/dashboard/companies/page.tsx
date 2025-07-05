@@ -1,273 +1,281 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { getAllCompanies, createCompany, updateCompany, deleteCompany } from "@/redux/actions/companyActions";
+import { Company } from "@/redux/reducers/companyReducer";
 import { Button } from "@/components/ui/button";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetClose 
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+  SheetClose,
 } from "@/components/ui/sheet";
-import { Plus, Edit, Trash2, X, Building, Phone, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-
-// Mock data
-const companies = [
-  { 
-    id: 1, 
-    name: "ABC Lojistik", 
-    address: "İstanbul, Kadıköy", 
-    phone: "0212 123 4567", 
-    email: "info@abclojistik.com",
-    status: "active" 
-  },
-  { 
-    id: 2, 
-    name: "XYZ Nakliyat", 
-    address: "İstanbul, Beşiktaş", 
-    phone: "0212 234 5678", 
-    email: "info@xyznakliyat.com",
-    status: "active" 
-  },
-  { 
-    id: 3, 
-    name: "DEF Taşımacılık", 
-    address: "Ankara, Çankaya", 
-    phone: "0312 345 6789", 
-    email: "info@deftasima.com",
-    status: "inactive" 
-  },
-];
+import { PlusCircle, Pencil, X } from "lucide-react";
+import DeleteConfirmation from "@/components/delete-confirmation";
 
 export default function CompaniesPage() {
+  const dispatch = useAppDispatch();
+  const { companies, loading } = useAppSelector((state) => state.company);
+  
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [selectedCompany, setSelectedCompany] = useState<any>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    address: "",
+    phone: "",
+    email: "",
+    status: "active",
+  });
+  const [editId, setEditId] = useState<string | null>(null);
 
-  const handleEdit = (company: any) => {
-    setSelectedCompany(company);
-    setIsEditOpen(true);
+  useEffect(() => {
+    dispatch(getAllCompanies());
+  }, [dispatch]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Bu firmayı silmek istediğinize emin misiniz?")) {
-      console.log("Firma silindi:", id);
+  const handleAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    dispatch(createCompany(formData)).then(() => {
+      setIsAddOpen(false);
+      resetForm();
+    });
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editId) {
+      dispatch(updateCompany({
+        id: editId,
+        ...formData,
+      })).then(() => {
+        setIsEditOpen(false);
+        resetForm();
+      });
     }
   };
 
+  const handleEdit = (company: Company) => {
+    setFormData({
+      name: company.name,
+      address: company.address,
+      phone: company.phone,
+      email: company.email,
+      status: company.status || "active",
+    });
+    setEditId(company._id);
+    setIsEditOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    dispatch(deleteCompany(id));
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      address: "",
+      phone: "",
+      email: "",
+      status: "active",
+    });
+    setEditId(null);
+  };
+
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Firma Yönetimi</h1>
-          <p className="text-gray-500">
-            Çalıştığınız firmaları bu sayfadan yönetebilirsiniz.
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold">Firmalar</h1>
         <Button onClick={() => setIsAddOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Yeni Firma Ekle
+          <PlusCircle className="mr-2 h-4 w-4" /> Yeni Firma Ekle
         </Button>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Firma Adı</TableHead>
-              <TableHead>Adres</TableHead>
-              <TableHead>İletişim</TableHead>
-              <TableHead>Durum</TableHead>
-              <TableHead className="text-right">İşlemler</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {companies.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-4">
-                  Kayıt bulunamadı
-                </TableCell>
-              </TableRow>
-            ) : (
-              companies.map((company) => (
-                <TableRow key={company.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Building className="h-5 w-5 text-gray-500" />
-                      <span className="font-medium">{company.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{company.address}</TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="h-3 w-3" />
-                        <span>{company.phone}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="h-3 w-3" />
-                        <span>{company.email}</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={company.status === 'active' ? 'default' : 'secondary'}>
-                      {company.status === 'active' ? 'Aktif' : 'Pasif'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(company)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(company.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {loading ? (
+        <div className="text-center py-10">Yükleniyor...</div>
+      ) : companies.length === 0 ? (
+        <div className="text-center py-10">Henüz firma bulunmuyor.</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {companies.map((company) => (
+            <div
+              key={company._id}
+              className="border rounded-lg overflow-hidden shadow-sm"
+            >
+              <div className="p-4">
+                <h3 className="font-bold text-lg">{company.name}</h3>
+                <div className="mt-2 space-y-1 text-sm">
+                  <p><span className="font-medium">Adres:</span> {company.address}</p>
+                  <p><span className="font-medium">Telefon:</span> {company.phone}</p>
+                  <p><span className="font-medium">E-posta:</span> {company.email}</p>
+                  <p>
+                    <span className="font-medium">Durum:</span>{" "}
+                    <span className={company.status === "active" ? "text-green-600" : "text-red-600"}>
+                      {company.status === "active" ? "Aktif" : "Pasif"}
+                    </span>
+                  </p>
+                </div>
+                <div className="mt-4 flex space-x-2">
+                  <Button variant="outline" size="sm" onClick={() => handleEdit(company)}>
+                    <Pencil className="h-4 w-4 mr-1" /> Düzenle
+                  </Button>
+                  <DeleteConfirmation
+                    title="Firmayı Sil"
+                    description={`${company.name} adlı firmayı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`}
+                    onDelete={() => handleDelete(company._id)}
+                    isLoading={loading}
+                    size="sm"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Add Company Sheet */}
       <Sheet open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <SheetContent className="w-full sm:max-w-md md:max-w-lg overflow-y-auto">
-          <SheetHeader className="border-b pb-4">
-            <div className="flex items-center justify-between">
-              <SheetTitle>Yeni Firma Ekle</SheetTitle>
+        <SheetContent hideCloseButton={true}>
+          <SheetHeader>
+            <SheetTitle className="flex justify-between items-center">
+              <span>Yeni Firma Ekle</span>
               <SheetClose asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" onClick={() => resetForm()}>
                   <X className="h-4 w-4" />
-                  <span className="sr-only">Kapat</span>
                 </Button>
               </SheetClose>
-            </div>
+            </SheetTitle>
           </SheetHeader>
-          <div className="px-6 py-6 overflow-y-auto">
-            <form className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Firma Adı</Label>
-                  <Input id="name" placeholder="ABC Lojistik" className="mt-1 h-10" />
-                </div>
-                <div>
-                  <Label htmlFor="address">Adres</Label>
-                  <Input id="address" placeholder="İstanbul, Kadıköy" className="mt-1 h-10" />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Telefon</Label>
-                  <Input id="phone" placeholder="0212 123 4567" className="mt-1 h-10" />
-                </div>
-                <div>
-                  <Label htmlFor="email">E-posta</Label>
-                  <Input id="email" type="email" placeholder="info@firma.com" className="mt-1 h-10" />
-                </div>
-                <div>
-                  <Label htmlFor="status">Durum</Label>
-                  <select 
-                    id="status" 
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
-                  >
-                    <option value="active">Aktif</option>
-                    <option value="inactive">Pasif</option>
-                  </select>
-                </div>
-              </div>
-              <Button type="submit" className="w-full h-10">Kaydet</Button>
-            </form>
-          </div>
+          <form onSubmit={handleAddSubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Firma Adı</Label>
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="address">Adres</Label>
+              <Input
+                id="address"
+                name="address"
+                value={formData.address}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Telefon</Label>
+              <Input
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">E-posta</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <SheetFooter>
+              <SheetClose asChild>
+                <Button type="button" variant="outline" onClick={() => resetForm()}>
+                  İptal
+                </Button>
+              </SheetClose>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Ekleniyor..." : "Ekle"}
+              </Button>
+            </SheetFooter>
+          </form>
         </SheetContent>
       </Sheet>
 
       {/* Edit Company Sheet */}
       <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <SheetContent className="w-full sm:max-w-md md:max-w-lg overflow-y-auto">
-          <SheetHeader className="border-b pb-4">
-            <div className="flex items-center justify-between">
-              <SheetTitle>Firma Düzenle</SheetTitle>
+        <SheetContent hideCloseButton={true}>
+          <SheetHeader>
+            <SheetTitle className="flex justify-between items-center">
+              <span>Firma Düzenle</span>
               <SheetClose asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" onClick={() => resetForm()}>
                   <X className="h-4 w-4" />
-                  <span className="sr-only">Kapat</span>
                 </Button>
               </SheetClose>
-            </div>
+            </SheetTitle>
           </SheetHeader>
-          <div className="px-6 py-6 overflow-y-auto">
-            {selectedCompany && (
-              <form className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="edit-name">Firma Adı</Label>
-                    <Input 
-                      id="edit-name" 
-                      defaultValue={selectedCompany.name} 
-                      className="mt-1 h-10" 
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-address">Adres</Label>
-                    <Input 
-                      id="edit-address" 
-                      defaultValue={selectedCompany.address} 
-                      className="mt-1 h-10" 
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-phone">Telefon</Label>
-                    <Input 
-                      id="edit-phone" 
-                      defaultValue={selectedCompany.phone} 
-                      className="mt-1 h-10" 
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-email">E-posta</Label>
-                    <Input 
-                      id="edit-email" 
-                      type="email" 
-                      defaultValue={selectedCompany.email} 
-                      className="mt-1 h-10" 
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-status">Durum</Label>
-                    <select 
-                      id="edit-status" 
-                      defaultValue={selectedCompany.status}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
-                    >
-                      <option value="active">Aktif</option>
-                      <option value="inactive">Pasif</option>
-                    </select>
-                  </div>
-                </div>
-                <Button type="submit" className="w-full h-10">Güncelle</Button>
-              </form>
-            )}
-          </div>
+          <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Firma Adı</Label>
+              <Input
+                id="edit-name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-address">Adres</Label>
+              <Input
+                id="edit-address"
+                name="address"
+                value={formData.address}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-phone">Telefon</Label>
+              <Input
+                id="edit-phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">E-posta</Label>
+              <Input
+                id="edit-email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <SheetFooter>
+              <SheetClose asChild>
+                <Button type="button" variant="outline" onClick={() => resetForm()}>
+                  İptal
+                </Button>
+              </SheetClose>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Güncelleniyor..." : "Güncelle"}
+              </Button>
+            </SheetFooter>
+          </form>
         </SheetContent>
       </Sheet>
     </div>

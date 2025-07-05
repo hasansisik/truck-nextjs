@@ -5,9 +5,20 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { IconTruckDelivery } from "@tabler/icons-react"
 
-import data from "./data.json"
-
 export default function Page() {
+  // Placeholder data that matches the required schema
+  const placeholderData = [
+    {
+      id: 1,
+      header: "Çekici Yönetimi",
+      type: "Yönetim",
+      status: "Done",
+      target: "10",
+      limit: "20",
+      reviewer: "Admin"
+    }
+  ];
+  
   return (
     <>
       <SectionCards />
@@ -23,7 +34,7 @@ export default function Page() {
         </div>
         <ChartAreaInteractive />
       </div>
-      <DataTable data={data} />
+      <DataTable data={placeholderData} />
     </>
   )
 }

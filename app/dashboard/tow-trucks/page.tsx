@@ -2,21 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { TowTable } from "@/components/tow-table";
-import { useAppDispatch } from "@/redux/hook";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { getAllTows } from "@/redux/actions/towActions";
+import { createVehicle } from "@/redux/actions/vehicleActions";
+import { createDriver } from "@/redux/actions/driverActions";
+import { createCompany } from "@/redux/actions/companyActions";
 import { Button } from "@/components/ui/button";
 import { 
   Sheet, 
   SheetContent, 
   SheetHeader, 
   SheetTitle, 
-  SheetClose 
+  SheetClose,
+  SheetFooter 
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, X, Truck, Users, Building, Upload, Loader2 } from "lucide-react";
-import Image from "next/image";
-import { uploadImageToCloudinary } from "@/utils/cloudinary";
+import { PlusCircle, Pencil, X, Truck, Users, Building } from "lucide-react";
 import { toast } from "sonner";
 
 export default function TowTrucksPage() {
@@ -25,65 +27,123 @@ export default function TowTrucksPage() {
   const [isDriverOpen, setIsDriverOpen] = useState(false);
   const [isCompanyOpen, setIsCompanyOpen] = useState(false);
   
-  // Image upload states
-  const [vehicleImage, setVehicleImage] = useState<string | null>(null);
-  const [driverImage, setDriverImage] = useState<string | null>(null);
-  const [companyImage, setCompanyImage] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState<{[key: string]: boolean}>({
-    vehicle: false,
-    driver: false,
-    company: false
+  // Form states
+  const [vehicleForm, setVehicleForm] = useState({
+    name: "",
+    model: "",
+    year: "",
+    licensePlate: "",
+    status: "active",
   });
+  
+  const [driverForm, setDriverForm] = useState({
+    name: "",
+    phone: "",
+    license: "",
+    experience: "",
+    status: "active",
+  });
+  
+  const [companyForm, setCompanyForm] = useState({
+    name: "",
+    address: "",
+    phone: "",
+    email: "",
+    status: "active",
+  });
+
+  // Redux states
+  const { vehicles, loading: vehicleLoading, error: vehicleError } = useAppSelector(state => state.vehicle || {});
+  const { drivers, loading: driverLoading, error: driverError } = useAppSelector(state => state.driver || {});
+  const { companies, loading: companyLoading, error: companyError } = useAppSelector(state => state.company || {});
 
   useEffect(() => {
     dispatch(getAllTows());
   }, [dispatch]);
   
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'vehicle' | 'driver' | 'company') => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    
-    const file = e.target.files[0];
-    
-    try {
-      // Check file size
-      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-      if (file.size > MAX_FILE_SIZE) {
-        toast.error(`Dosya boyutu çok büyük (maksimum 10MB): ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
-        return;
-      }
-      
-      setIsUploading(prev => ({ ...prev, [type]: true }));
-      
-      // Upload to Cloudinary
-      const imageUrl = await uploadImageToCloudinary(file);
-      
-      // Update state based on type
-      if (type === 'vehicle') setVehicleImage(imageUrl);
-      else if (type === 'driver') setDriverImage(imageUrl);
-      else if (type === 'company') setCompanyImage(imageUrl);
-      
-      toast.success('Fotoğraf başarıyla yüklendi');
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      toast.error(error.message || 'Fotoğraf yüklenirken bir hata oluştu');
-    } finally {
-      setIsUploading(prev => ({ ...prev, [type]: false }));
-      // Clear input
-      e.target.value = '';
-    }
+  const handleVehicleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setVehicleForm({ ...vehicleForm, [name]: value });
   };
   
-  const handleFormReset = (type: 'vehicle' | 'driver' | 'company') => {
-    if (type === 'vehicle') {
-      setVehicleImage(null);
+  const handleDriverInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setDriverForm({ ...driverForm, [name]: value });
+  };
+  
+  const handleCompanyInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCompanyForm({ ...companyForm, [name]: value });
+  };
+  
+  const resetVehicleForm = () => {
+    setVehicleForm({
+      name: "",
+      model: "",
+      year: "",
+      licensePlate: "",
+      status: "active",
+    });
+    setIsVehicleOpen(false);
+  };
+  
+  const resetDriverForm = () => {
+    setDriverForm({
+      name: "",
+      phone: "",
+      license: "",
+      experience: "",
+      status: "active",
+    });
+    setIsDriverOpen(false);
+  };
+  
+  const resetCompanyForm = () => {
+    setCompanyForm({
+      name: "",
+      address: "",
+      phone: "",
+      email: "",
+      status: "active",
+    });
+    setIsCompanyOpen(false);
+  };
+
+  const handleVehicleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    dispatch(createVehicle({
+      ...vehicleForm,
+      year: parseInt(vehicleForm.year) || new Date().getFullYear(),
+      plateNumber: vehicleForm.licensePlate
+    })).then(() => {
       setIsVehicleOpen(false);
-    } else if (type === 'driver') {
-      setDriverImage(null);
+      resetVehicleForm();
+      dispatch(getAllTows());
+    });
+  };
+
+  const handleDriverSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    dispatch(createDriver({
+      ...driverForm,
+      experience: parseInt(driverForm.experience) || 0,
+    })).then(() => {
       setIsDriverOpen(false);
-    } else if (type === 'company') {
-      setCompanyImage(null);
+      resetDriverForm();
+      dispatch(getAllTows());
+    });
+  };
+
+  const handleCompanySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    dispatch(createCompany(companyForm)).then(() => {
       setIsCompanyOpen(false);
-    }
+      resetCompanyForm();
+      dispatch(getAllTows());
+    });
   };
 
   return (
@@ -129,287 +189,221 @@ export default function TowTrucksPage() {
       
       <TowTable />
       
-      {/* Quick Add Vehicle Sheet */}
-      <Sheet 
-        open={isVehicleOpen} 
-        onOpenChange={(open) => {
-          if (!open) handleFormReset('vehicle');
-          else setIsVehicleOpen(true);
-        }}
-      >
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-          <SheetHeader className="border-b pb-4">
-            <div className="flex items-center justify-between">
-              <SheetTitle>Hızlı Araç Ekle</SheetTitle>
+      {/* Quick Add Vehicle Sheet - Matches vehicles/page.tsx */}
+      <Sheet open={isVehicleOpen} onOpenChange={setIsVehicleOpen}>
+        <SheetContent hideCloseButton={true}>
+          <SheetHeader>
+            <SheetTitle className="flex justify-between items-center">
+              <span>Yeni Araç Ekle</span>
               <SheetClose asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <span className="sr-only">Kapat</span>
+                <Button variant="ghost" size="icon" onClick={() => resetVehicleForm()}>
+                  <X className="h-4 w-4" />
                 </Button>
               </SheetClose>
-            </div>
+            </SheetTitle>
           </SheetHeader>
-          <div className="px-6 py-6 overflow-y-auto">
-            <form className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Araç Adı</Label>
-                  <Input id="name" placeholder="Çekici 1" className="mt-1 h-10" />
-                </div>
-                <div>
-                  <Label htmlFor="model">Model</Label>
-                  <Input id="model" placeholder="Ford F-450" className="mt-1 h-10" />
-                </div>
-                <div>
-                  <Label htmlFor="licensePlate">Plaka</Label>
-                  <Input id="licensePlate" placeholder="34ABC123" className="mt-1 h-10" />
-                </div>
-                <div>
-                  <Label htmlFor="vehicleImage">Araç Fotoğrafı</Label>
-                  <div className="mt-2">
-                    {vehicleImage ? (
-                      <div className="relative w-full h-48 rounded-md overflow-hidden mb-2">
-                        <Image
-                          src={vehicleImage}
-                          alt="Araç fotoğrafı"
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2"
-                          onClick={() => setVehicleImage(null)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full h-48 flex flex-col items-center justify-center border-dashed"
-                        onClick={() => document.getElementById('vehicleImageInput')?.click()}
-                        disabled={isUploading.vehicle}
-                      >
-                        {isUploading.vehicle ? (
-                          <>
-                            <Loader2 className="h-6 w-6 mb-2 animate-spin" />
-                            <span>Yükleniyor...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="h-6 w-6 mb-2" />
-                            <span>Fotoğraf Yükle</span>
-                          </>
-                        )}
-                      </Button>
-                    )}
-                    <input
-                      id="vehicleImageInput"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => handleImageUpload(e, 'vehicle')}
-                      disabled={isUploading.vehicle}
-                    />
-                  </div>
-                </div>
-              </div>
-              <Button type="submit" className="w-full h-10">Kaydet</Button>
-            </form>
-          </div>
+          <form onSubmit={handleVehicleSubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Araç Adı</Label>
+              <Input
+                id="name"
+                name="name"
+                placeholder="Çekici 1"
+                value={vehicleForm.name}
+                onChange={handleVehicleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="model">Model</Label>
+              <Input
+                id="model"
+                name="model"
+                placeholder="Ford F-450"
+                value={vehicleForm.model}
+                onChange={handleVehicleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="year">Yıl</Label>
+              <Input
+                id="year"
+                name="year"
+                placeholder="2023"
+                value={vehicleForm.year}
+                onChange={handleVehicleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="licensePlate">Plaka</Label>
+              <Input
+                id="licensePlate"
+                name="licensePlate"
+                placeholder="34ABC123"
+                value={vehicleForm.licensePlate}
+                onChange={handleVehicleInputChange}
+                required
+              />
+            </div>
+            <SheetFooter>
+              <SheetClose asChild>
+                <Button type="button" variant="outline" onClick={() => resetVehicleForm()}>
+                  İptal
+                </Button>
+              </SheetClose>
+              <Button type="submit" disabled={vehicleLoading}>
+                {vehicleLoading ? "Ekleniyor..." : "Ekle"}
+              </Button>
+            </SheetFooter>
+          </form>
         </SheetContent>
       </Sheet>
       
-      {/* Quick Add Driver Sheet */}
-      <Sheet 
-        open={isDriverOpen} 
-        onOpenChange={(open) => {
-          if (!open) handleFormReset('driver');
-          else setIsDriverOpen(true);
-        }}
-      >
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-          <SheetHeader className="border-b pb-4">
-            <div className="flex items-center justify-between">
-              <SheetTitle>Hızlı Şoför Ekle</SheetTitle>
+      {/* Quick Add Driver Sheet - Matches drivers/page.tsx */}
+      <Sheet open={isDriverOpen} onOpenChange={setIsDriverOpen}>
+        <SheetContent hideCloseButton={true}>
+          <SheetHeader>
+            <SheetTitle className="flex justify-between items-center">
+              <span>Yeni Şoför Ekle</span>
               <SheetClose asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" onClick={() => resetDriverForm()}>
                   <X className="h-4 w-4" />
-                  <span className="sr-only">Kapat</span>
                 </Button>
               </SheetClose>
-            </div>
+            </SheetTitle>
           </SheetHeader>
-          <div className="px-6 py-6 overflow-y-auto">
-            <form className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="driverName">Ad Soyad</Label>
-                  <Input id="driverName" placeholder="Ahmet Yılmaz" className="mt-1 h-10" />
-                </div>
-                <div>
-                  <Label htmlFor="driverPhone">Telefon</Label>
-                  <Input id="driverPhone" placeholder="0532 123 4567" className="mt-1 h-10" />
-                </div>
-                <div>
-                  <Label htmlFor="driverLicense">Ehliyet Sınıfı</Label>
-                  <Input id="driverLicense" placeholder="E" className="mt-1 h-10" />
-                </div>
-                <div>
-                  <Label htmlFor="driverImage">Şoför Fotoğrafı</Label>
-                  <div className="mt-2">
-                    {driverImage ? (
-                      <div className="relative w-full h-48 rounded-md overflow-hidden mb-2">
-                        <Image
-                          src={driverImage}
-                          alt="Şoför fotoğrafı"
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2"
-                          onClick={() => setDriverImage(null)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full h-48 flex flex-col items-center justify-center border-dashed"
-                        onClick={() => document.getElementById('driverImageInput')?.click()}
-                        disabled={isUploading.driver}
-                      >
-                        {isUploading.driver ? (
-                          <>
-                            <Loader2 className="h-6 w-6 mb-2 animate-spin" />
-                            <span>Yükleniyor...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="h-6 w-6 mb-2" />
-                            <span>Fotoğraf Yükle</span>
-                          </>
-                        )}
-                      </Button>
-                    )}
-                    <input
-                      id="driverImageInput"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => handleImageUpload(e, 'driver')}
-                      disabled={isUploading.driver}
-                    />
-                  </div>
-                </div>
-              </div>
-              <Button type="submit" className="w-full h-10">Kaydet</Button>
-            </form>
-          </div>
+          <form onSubmit={handleDriverSubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Ad Soyad</Label>
+              <Input
+                id="name"
+                name="name"
+                placeholder="Ahmet Yılmaz"
+                value={driverForm.name}
+                onChange={handleDriverInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Telefon</Label>
+              <Input
+                id="phone"
+                name="phone"
+                placeholder="0532 123 4567"
+                value={driverForm.phone}
+                onChange={handleDriverInputChange}
+                required
+              />
+              <p className="text-xs text-gray-500">Örnek: 0532 123 4567 veya 5321234567</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="license">Ehliyet Sınıfı</Label>
+              <Input
+                id="license"
+                name="license"
+                placeholder="E"
+                value={driverForm.license}
+                onChange={handleDriverInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="experience">Deneyim (Yıl)</Label>
+              <Input
+                id="experience"
+                name="experience"
+                placeholder="5"
+                value={driverForm.experience}
+                onChange={handleDriverInputChange}
+                required
+              />
+            </div>
+            <SheetFooter>
+              <SheetClose asChild>
+                <Button type="button" variant="outline" onClick={() => resetDriverForm()}>
+                  İptal
+                </Button>
+              </SheetClose>
+              <Button type="submit" disabled={driverLoading}>
+                {driverLoading ? "Ekleniyor..." : "Ekle"}
+              </Button>
+            </SheetFooter>
+          </form>
         </SheetContent>
       </Sheet>
       
-      {/* Quick Add Company Sheet */}
-      <Sheet 
-        open={isCompanyOpen} 
-        onOpenChange={(open) => {
-          if (!open) handleFormReset('company');
-          else setIsCompanyOpen(true);
-        }}
-      >
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-          <SheetHeader className="border-b pb-4">
-            <div className="flex items-center justify-between">
-              <SheetTitle>Hızlı Firma Ekle</SheetTitle>
+      {/* Quick Add Company Sheet - Matches companies/page.tsx */}
+      <Sheet open={isCompanyOpen} onOpenChange={setIsCompanyOpen}>
+        <SheetContent hideCloseButton={true}>
+          <SheetHeader>
+            <SheetTitle className="flex justify-between items-center">
+              <span>Yeni Firma Ekle</span>
               <SheetClose asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" onClick={() => resetCompanyForm()}>
                   <X className="h-4 w-4" />
-                  <span className="sr-only">Kapat</span>
                 </Button>
               </SheetClose>
-            </div>
+            </SheetTitle>
           </SheetHeader>
-          <div className="px-6 py-6 overflow-y-auto">
-            <form className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="companyName">Firma Adı</Label>
-                  <Input id="companyName" placeholder="ABC Lojistik" className="mt-1 h-10" />
-                </div>
-                <div>
-                  <Label htmlFor="companyPhone">Telefon</Label>
-                  <Input id="companyPhone" placeholder="0212 123 4567" className="mt-1 h-10" />
-                </div>
-                <div>
-                  <Label htmlFor="companyAddress">Adres</Label>
-                  <Input id="companyAddress" placeholder="İstanbul, Kadıköy" className="mt-1 h-10" />
-                </div>
-                <div>
-                  <Label htmlFor="companyLogo">Firma Logosu</Label>
-                  <div className="mt-2">
-                    {companyImage ? (
-                      <div className="relative w-full h-48 rounded-md overflow-hidden mb-2">
-                        <Image
-                          src={companyImage}
-                          alt="Firma logosu"
-                          fill
-                          className="object-contain"
-                          unoptimized
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2"
-                          onClick={() => setCompanyImage(null)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full h-48 flex flex-col items-center justify-center border-dashed"
-                        onClick={() => document.getElementById('companyImageInput')?.click()}
-                        disabled={isUploading.company}
-                      >
-                        {isUploading.company ? (
-                          <>
-                            <Loader2 className="h-6 w-6 mb-2 animate-spin" />
-                            <span>Yükleniyor...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="h-6 w-6 mb-2" />
-                            <span>Logo Yükle</span>
-                          </>
-                        )}
-                      </Button>
-                    )}
-                    <input
-                      id="companyImageInput"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => handleImageUpload(e, 'company')}
-                      disabled={isUploading.company}
-                    />
-                  </div>
-                </div>
-              </div>
-              <Button type="submit" className="w-full h-10">Kaydet</Button>
-            </form>
-          </div>
+          <form onSubmit={handleCompanySubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Firma Adı</Label>
+              <Input
+                id="name"
+                name="name"
+                placeholder="ABC Lojistik"
+                value={companyForm.name}
+                onChange={handleCompanyInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="address">Adres</Label>
+              <Input
+                id="address"
+                name="address"
+                placeholder="İstanbul, Kadıköy"
+                value={companyForm.address}
+                onChange={handleCompanyInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Telefon</Label>
+              <Input
+                id="phone"
+                name="phone"
+                placeholder="0212 123 4567"
+                value={companyForm.phone}
+                onChange={handleCompanyInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">E-posta</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="info@abclojistik.com"
+                value={companyForm.email}
+                onChange={handleCompanyInputChange}
+                required
+              />
+            </div>
+            <SheetFooter>
+              <SheetClose asChild>
+                <Button type="button" variant="outline" onClick={() => resetCompanyForm()}>
+                  İptal
+                </Button>
+              </SheetClose>
+              <Button type="submit" disabled={companyLoading}>
+                {companyLoading ? "Ekleniyor..." : "Ekle"}
+              </Button>
+            </SheetFooter>
+          </form>
         </SheetContent>
       </Sheet>
     </div>

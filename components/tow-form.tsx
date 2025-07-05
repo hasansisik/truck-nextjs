@@ -7,6 +7,9 @@ import * as z from "zod";
 import { format } from "date-fns";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { createTow, updateTow } from "@/redux/actions/towActions";
+import { getAllVehicles } from "@/redux/actions/vehicleActions";
+import { getAllDrivers } from "@/redux/actions/driverActions";
+import { getAllCompanies } from "@/redux/actions/companyActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,17 +55,29 @@ interface TowFormProps {
   onSuccess: () => void;
 }
 
-// Mock data for selects
-const towTrucks = ["Çekici 1", "Çekici 2", "Çekici 3", "Çekici 4"];
-const drivers = ["Ahmet Yılmaz", "Mehmet Demir", "Ali Kaya", "Veli Şahin"];
-const companies = ["ABC Lojistik", "XYZ Nakliyat", "DEF Taşımacılık", "GHI Kargo"];
-
 export function TowForm({ tow, onSuccess }: TowFormProps) {
   const dispatch = useAppDispatch();
   const { loading, success, error } = useAppSelector((state) => state.tow);
+  const { vehicles } = useAppSelector((state) => state.vehicle);
+  const { drivers } = useAppSelector((state) => state.driver);
+  const { companies } = useAppSelector((state) => state.company);
+  
   const [images, setImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
+
+  // Fetch data if needed
+  useEffect(() => {
+    if (!vehicles?.length) {
+      dispatch(getAllVehicles());
+    }
+    if (!drivers?.length) {
+      dispatch(getAllDrivers());
+    }
+    if (!companies?.length) {
+      dispatch(getAllCompanies());
+    }
+  }, [dispatch, vehicles, drivers, companies]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -111,12 +126,7 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
       setIsSubmitting(true);
       setImageError(null);
       
-      // Validate images if needed
-      if (images.length === 0) {
-        setImageError("En az bir fotoğraf yüklemeniz gerekmektedir");
-        setIsSubmitting(false);
-        return;
-      }
+      // Fotoğraf artık zorunlu değil
       
       if (tow) {
         await dispatch(updateTow({
@@ -135,7 +145,11 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
     } catch (error: any) {
       setIsSubmitting(false);
       console.error("Error submitting form:", error);
-      toast.error(error.message || "Kayıt sırasında bir hata oluştu");
+      if (error.message?.includes("404")) {
+        toast.error("API sunucusu bulunamadı. Lütfen sunucunun çalıştığından emin olun.");
+      } else {
+        toast.error(error.message || "Kayıt sırasında bir hata oluştu");
+      }
     }
   };
 
@@ -144,7 +158,9 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {error && (
           <div className="bg-destructive/15 p-3 rounded-md text-destructive mb-4 text-sm">
-            {error}
+            {error === "Request failed with status code 404" 
+              ? "API sunucusu bulunamadı. Lütfen sunucunun çalıştığından emin olun."
+              : error}
           </div>
         )}
 
@@ -169,9 +185,9 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>Çekiciler</SelectLabel>
-                      {towTrucks.map((truck) => (
-                        <SelectItem key={truck} value={truck}>
-                          {truck}
+                      {vehicles && vehicles.map((vehicle) => (
+                        <SelectItem key={vehicle._id} value={vehicle.name}>
+                          {vehicle.name}
                         </SelectItem>
                       ))}
                     </SelectGroup>
@@ -202,9 +218,9 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>Şoförler</SelectLabel>
-                      {drivers.map((driver) => (
-                        <SelectItem key={driver} value={driver}>
-                          {driver}
+                      {drivers && drivers.map((driver) => (
+                        <SelectItem key={driver._id} value={driver.name}>
+                          {driver.name}
                         </SelectItem>
                       ))}
                     </SelectGroup>
@@ -319,9 +335,9 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
                 <SelectContent>
                   <SelectGroup>
                     <SelectLabel>Firmalar</SelectLabel>
-                    {companies.map((company) => (
-                      <SelectItem key={company} value={company}>
-                        {company}
+                    {companies && companies.map((company) => (
+                      <SelectItem key={company._id} value={company.name}>
+                        {company.name}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -333,7 +349,7 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
         />
 
         <div className="space-y-3 mt-2">
-          <Label className="text-sm font-medium">Fotoğraflar</Label>
+          <Label className="text-sm font-medium">Fotoğraflar (İsteğe bağlı)</Label>
           <ImageUpload
             value={images}
             onChange={handleImageChange}

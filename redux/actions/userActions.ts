@@ -1,7 +1,7 @@
 import axios from "axios";
 import { createAsyncThunk, createAction } from "@reduxjs/toolkit";
 import { server } from "@/config";
-import { safeLocalStorage } from "@/lib/utils";
+import { safeLocalStorage, handleApiError, showSuccess, showPermissionDenied } from "@/lib/utils";
 
 // Clear error action
 export const clearError = createAction('user/clearError');
@@ -66,7 +66,7 @@ export const setPremiumStatus = createAsyncThunk(
   "user/setPremiumStatus",
   async (isPremium: boolean, thunkAPI) => {
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = safeLocalStorage.getItem("accessToken");
       const { data } = await axios.post(`${server}/auth/set-premium-status`, 
         { isPremium },
         {
@@ -75,10 +75,11 @@ export const setPremiumStatus = createAsyncThunk(
           },
         }
       );
+      showSuccess("Premium durum başarıyla güncellendi");
       return data.user;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Premium durum güncellenemedi';
-      return thunkAPI.rejectWithValue(message);
+      handleApiError(error, 'Premium durum güncellenemedi', true);
+      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Premium durum güncellenemedi');
     }
   }
 );
@@ -89,10 +90,11 @@ export const registerUser = createAsyncThunk(
   async (payload: RegisterUserPayload, thunkAPI) => {
     try {
       const { data } = await axios.post(`${server}/auth/register-user`, payload);
+      showSuccess("Kayıt başarılı", "Lütfen e-posta adresinizi doğrulayın.");
       return data;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Kullanıcı kaydı yapılamadı';
-      return thunkAPI.rejectWithValue(message);
+      handleApiError(error, 'Kullanıcı kaydı yapılamadı', true);
+      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Kullanıcı kaydı yapılamadı');
     }
   }
 );
@@ -103,10 +105,11 @@ export const forgotPassword = createAsyncThunk(
   async (payload: ForgotPasswordPayload, thunkAPI) => {
     try {
       const { data } = await axios.post(`${server}/auth/forgot-password`, payload);
+      showSuccess("Şifre sıfırlama bağlantısı gönderildi", "Lütfen e-posta kutunuzu kontrol edin.");
       return data;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Şifre sıfırlama isteği gönderilemedi';
-      return thunkAPI.rejectWithValue(message);
+      handleApiError(error, 'Şifre sıfırlama isteği gönderilemedi', true);
+      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Şifre sıfırlama isteği gönderilemedi');
     }
   }
 );
@@ -117,10 +120,11 @@ export const resetPassword = createAsyncThunk(
   async (payload: ResetPasswordPayload, thunkAPI) => {
     try {
       const { data } = await axios.post(`${server}/auth/reset-password`, payload);
+      showSuccess("Şifreniz başarıyla sıfırlandı", "Şimdi giriş yapabilirsiniz.");
       return data;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Şifre sıfırlanamadı';
-      return thunkAPI.rejectWithValue(message);
+      handleApiError(error, 'Şifre sıfırlanamadı', true);
+      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Şifre sıfırlanamadı');
     }
   }
 );
@@ -137,10 +141,11 @@ export const verifyEmail = createAsyncThunk(
         email: payload.email,
         verificationCode: code
       });
+      showSuccess("E-posta adresiniz başarıyla doğrulandı", "Şimdi giriş yapabilirsiniz.");
       return data;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Email doğrulanamadı';
-      return thunkAPI.rejectWithValue(message);
+      handleApiError(error, 'Email doğrulanamadı', true);
+      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Email doğrulanamadı');
     }
   }
 );
@@ -151,10 +156,11 @@ export const resendVerificationCode = createAsyncThunk(
   async (email: string, thunkAPI) => {
     try {
       const { data } = await axios.post(`${server}/auth/again-email`, { email });
+      showSuccess("Doğrulama kodu gönderildi", "Lütfen e-posta kutunuzu kontrol edin.");
       return data;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Doğrulama kodu gönderilemedi';
-      return thunkAPI.rejectWithValue(message);
+      handleApiError(error, 'Doğrulama kodu gönderilemedi', true);
+      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Doğrulama kodu gönderilemedi');
     }
   }
 );
@@ -169,6 +175,7 @@ export const login = createAsyncThunk(
       if (typeof document !== "undefined") {
         document.cookie = `token=${token}; path=/; max-age=86400`; // 24 hours
       }
+      showSuccess("Giriş başarılı", "Hoş geldiniz!");
       return data.user;
     } catch (error: any) {
       let message = error.response?.data?.message || 'Giriş yapılamadı';
@@ -178,6 +185,7 @@ export const login = createAsyncThunk(
         message = 'E-posta adresiniz veya şifreniz hatalı. Lütfen tekrar deneyin.';
       }
       
+      handleApiError(error, message, true);
       return thunkAPI.rejectWithValue(message);
     }
   }
@@ -193,10 +201,16 @@ export const register = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
+      showSuccess("Kullanıcı başarıyla oluşturuldu");
       return data.user;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Kullanıcı kaydı yapılamadı';
-      return thunkAPI.rejectWithValue(message);
+      // Check for permission error
+      if (error?.response?.status === 403) {
+        showPermissionDenied();
+      } else {
+        handleApiError(error, 'Kullanıcı kaydı yapılamadı', true);
+      }
+      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Kullanıcı kaydı yapılamadı');
     }
   }
 );
@@ -217,8 +231,8 @@ export const logout = createAsyncThunk(
       }
       return null;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Çıkış yapılamadı';
-      return thunkAPI.rejectWithValue(message);
+      handleApiError(error, 'Çıkış yapılamadı', true);
+      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Çıkış yapılamadı');
     }
   }
 );
@@ -239,15 +253,8 @@ export const getMyProfile = createAsyncThunk(
       });
       return data.user;
     } catch (error: any) {
-      let message = error.response?.data?.message || 'Profil bilgileri alınamadı';
-      
-      // Don't show technical errors for profile fetch failures
-      if (message === 'Unauthorized' || error.response?.status === 401) {
-        // Silently fail for unauthorized profile requests
-        return thunkAPI.rejectWithValue(null);
-      }
-      
-      return thunkAPI.rejectWithValue(message);
+      handleApiError(error, 'Profil bilgileri alınamadı', false);
+      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Profil bilgileri alınamadı');
     }
   }
 );
@@ -262,10 +269,16 @@ export const editProfile = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
+      showSuccess("Profil başarıyla güncellendi");
       return data.user;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Profil güncellenemedi';
-      return thunkAPI.rejectWithValue(message);
+      // Check for permission error
+      if (error?.response?.status === 403) {
+        showPermissionDenied();
+      } else {
+        handleApiError(error, 'Profil güncellenemedi');
+      }
+      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Profil güncellenemedi');
     }
   }
 );
@@ -282,8 +295,8 @@ export const getAllUsers = createAsyncThunk(
       });
       return data.users;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Kullanıcılar alınamadı';
-      return thunkAPI.rejectWithValue(message);
+      handleApiError(error, 'Kullanıcılar alınamadı');
+      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Kullanıcılar alınamadı');
     }
   }
 );
@@ -299,10 +312,16 @@ export const editUser = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
+      showSuccess("Kullanıcı bilgileri güncellendi");
       return data.user;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Kullanıcı güncellenemedi';
-      return thunkAPI.rejectWithValue(message);
+      // Check for permission error
+      if (error?.response?.status === 403) {
+        showPermissionDenied();
+      } else {
+        handleApiError(error, 'Kullanıcı güncellenemedi');
+      }
+      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Kullanıcı güncellenemedi');
     }
   }
 );
@@ -317,10 +336,16 @@ export const deleteUser = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
+      showSuccess("Kullanıcı başarıyla silindi");
       return userId;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Kullanıcı silinemedi';
-      return thunkAPI.rejectWithValue(message);
+      // Check for permission error
+      if (error?.response?.status === 403) {
+        showPermissionDenied();
+      } else {
+        handleApiError(error, 'Kullanıcı silinemedi');
+      }
+      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Kullanıcı silinemedi');
     }
   }
 );

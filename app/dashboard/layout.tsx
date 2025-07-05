@@ -1,16 +1,14 @@
 "use client"
 
 import { useEffect } from "react"
+import { useAppDispatch } from "@/redux/hook"
+import { getMyProfile } from "@/redux/actions/userActions"
+import { getAllVehicles } from "@/redux/actions/vehicleActions"
+import { getAllDrivers } from "@/redux/actions/driverActions"
+import { getAllCompanies } from "@/redux/actions/companyActions"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@/components/ui/sidebar"
-import { useAppDispatch, useAppSelector } from "@/redux/hook"
-import { getMyProfile } from "@/redux/actions/userActions"
-import { useRouter } from "next/navigation"
-import { safeLocalStorage } from "@/lib/utils"
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 
 export default function DashboardLayout({
   children,
@@ -18,22 +16,13 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const dispatch = useAppDispatch()
-  const { isAuthenticated } = useAppSelector((state) => state.user)
-  const router = useRouter()
 
   useEffect(() => {
-    const loadUser = async () => {
-      await dispatch(getMyProfile())
-    }
-    
-    loadUser()
+    dispatch(getMyProfile())
+    dispatch(getAllVehicles())
+    dispatch(getAllDrivers())
+    dispatch(getAllCompanies())
   }, [dispatch])
-
-  useEffect(() => {
-    if (!safeLocalStorage.getItem("accessToken")) {
-      router.push("/login")
-    }
-  }, [router])
 
   return (
     <SidebarProvider

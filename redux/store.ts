@@ -2,11 +2,17 @@
 import { configureStore } from "@reduxjs/toolkit";
 import userReducer from "./reducers/userReducer";
 import towReducer from "./reducers/towReducer";
+import { vehicleReducer } from './reducers/vehicleReducer';
+import { driverReducer } from './reducers/driverReducer';
+import { companyReducer } from './reducers/companyReducer';
 
 export const store = configureStore({
   reducer: {
     user: userReducer,
     tow: towReducer,
+    vehicle: vehicleReducer,
+    driver: driverReducer,
+    company: companyReducer,
   },
   devTools: process.env.NODE_ENV !== 'production',
   middleware: (getDefaultMiddleware) =>

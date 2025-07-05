@@ -1,210 +1,285 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { getAllVehicles, createVehicle, updateVehicle, deleteVehicle } from "@/redux/actions/vehicleActions";
+import { Vehicle } from "@/redux/reducers/vehicleReducer";
 import { Button } from "@/components/ui/button";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetClose 
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+  SheetClose,
 } from "@/components/ui/sheet";
-import { Plus, Edit, Trash2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-// Mock data
-const vehicles = [
-  { id: 1, name: "Çekici 1", model: "Ford F-450", year: 2020, licensePlate: "34ABC123" },
-  { id: 2, name: "Çekici 2", model: "Mercedes Actros", year: 2021, licensePlate: "34DEF456" },
-  { id: 3, name: "Çekici 3", model: "MAN TGX", year: 2019, licensePlate: "34GHI789" },
-];
+import { PlusCircle, Pencil, X } from "lucide-react";
+import DeleteConfirmation from "@/components/delete-confirmation";
 
 export default function VehiclesPage() {
+  const dispatch = useAppDispatch();
+  const { vehicles, loading } = useAppSelector((state) => state.vehicle);
+  
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    model: "",
+    year: "",
+    licensePlate: "",
+    status: "active",
+  });
+  const [editId, setEditId] = useState<string | null>(null);
 
-  const handleEdit = (vehicle: any) => {
-    setSelectedVehicle(vehicle);
-    setIsEditOpen(true);
+  useEffect(() => {
+    dispatch(getAllVehicles());
+  }, [dispatch]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Bu aracı silmek istediğinize emin misiniz?")) {
-      console.log("Araç silindi:", id);
+  const handleAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    dispatch(createVehicle({
+      ...formData,
+      year: parseInt(formData.year),
+    })).then(() => {
+      setIsAddOpen(false);
+      resetForm();
+    });
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editId) {
+      dispatch(updateVehicle({
+        id: editId,
+        ...formData,
+        year: parseInt(formData.year),
+      })).then(() => {
+        setIsEditOpen(false);
+        resetForm();
+      });
     }
   };
 
+  const handleEdit = (vehicle: Vehicle) => {
+    setFormData({
+      name: vehicle.name,
+      model: vehicle.model,
+      year: vehicle.year.toString(),
+      licensePlate: vehicle.licensePlate,
+      status: vehicle.status || "active",
+    });
+    setEditId(vehicle._id);
+    setIsEditOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    dispatch(deleteVehicle(id));
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      model: "",
+      year: "",
+      licensePlate: "",
+      status: "active",
+    });
+    setEditId(null);
+  };
+
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Araç Yönetimi</h1>
-          <p className="text-gray-500">
-            Çekici araçlarınızı bu sayfadan yönetebilirsiniz.
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold">Araçlar</h1>
         <Button onClick={() => setIsAddOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Yeni Araç Ekle
+          <PlusCircle className="mr-2 h-4 w-4" /> Yeni Araç Ekle
         </Button>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Araç Adı</TableHead>
-              <TableHead>Model</TableHead>
-              <TableHead>Yıl</TableHead>
-              <TableHead>Plaka</TableHead>
-              <TableHead className="text-right">İşlemler</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {vehicles.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-4">
-                  Kayıt bulunamadı
-                </TableCell>
-              </TableRow>
-            ) : (
-              vehicles.map((vehicle) => (
-                <TableRow key={vehicle.id}>
-                  <TableCell>{vehicle.name}</TableCell>
-                  <TableCell>{vehicle.model}</TableCell>
-                  <TableCell>{vehicle.year}</TableCell>
-                  <TableCell>{vehicle.licensePlate}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(vehicle)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(vehicle.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {loading ? (
+        <div className="text-center py-10">Yükleniyor...</div>
+      ) : vehicles.length === 0 ? (
+        <div className="text-center py-10">Henüz araç bulunmuyor.</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {vehicles.map((vehicle) => (
+            <div
+              key={vehicle._id}
+              className="border rounded-lg overflow-hidden shadow-sm"
+            >
+              <div className="p-4">
+                <h3 className="font-bold text-lg">{vehicle.name}</h3>
+                <div className="mt-2 space-y-1 text-sm">
+                  <p><span className="font-medium">Model:</span> {vehicle.model}</p>
+                  <p><span className="font-medium">Yıl:</span> {vehicle.year}</p>
+                  <p><span className="font-medium">Plaka:</span> {vehicle.licensePlate}</p>
+                  <p>
+                    <span className="font-medium">Durum:</span>{" "}
+                    <span className={vehicle.status === "active" ? "text-green-600" : "text-red-600"}>
+                      {vehicle.status === "active" ? "Aktif" : "Pasif"}
+                    </span>
+                  </p>
+                </div>
+                <div className="mt-4 flex space-x-2">
+                  <Button variant="outline" size="sm" onClick={() => handleEdit(vehicle)}>
+                    <Pencil className="h-4 w-4 mr-1" /> Düzenle
+                  </Button>
+                  <DeleteConfirmation
+                    title="Aracı Sil"
+                    description={`${vehicle.name} aracını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`}
+                    onDelete={() => handleDelete(vehicle._id)}
+                    isLoading={loading}
+                    size="sm"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Add Vehicle Sheet */}
       <Sheet open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <SheetContent className="w-full sm:max-w-md md:max-w-lg overflow-y-auto">
-          <SheetHeader className="border-b pb-4">
-            <div className="flex items-center justify-between">
-              <SheetTitle>Yeni Araç Ekle</SheetTitle>
+        <SheetContent hideCloseButton={true}>
+          <SheetHeader>
+            <SheetTitle className="flex justify-between items-center">
+              <span>Yeni Araç Ekle</span>
               <SheetClose asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" onClick={() => resetForm()}>
                   <X className="h-4 w-4" />
-                  <span className="sr-only">Kapat</span>
                 </Button>
               </SheetClose>
-            </div>
+            </SheetTitle>
           </SheetHeader>
-          <div className="px-6 py-6 overflow-y-auto">
-            <form className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Araç Adı</Label>
-                  <Input id="name" placeholder="Çekici 1" className="mt-1 h-10" />
-                </div>
-                <div>
-                  <Label htmlFor="model">Model</Label>
-                  <Input id="model" placeholder="Ford F-450" className="mt-1 h-10" />
-                </div>
-                <div>
-                  <Label htmlFor="year">Yıl</Label>
-                  <Input id="year" type="number" placeholder="2023" className="mt-1 h-10" />
-                </div>
-                <div>
-                  <Label htmlFor="licensePlate">Plaka</Label>
-                  <Input id="licensePlate" placeholder="34ABC123" className="mt-1 h-10" />
-                </div>
-              </div>
-              <Button type="submit" className="w-full h-10">Kaydet</Button>
-            </form>
-          </div>
+          <form onSubmit={handleAddSubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Araç Adı</Label>
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="model">Model</Label>
+              <Input
+                id="model"
+                name="model"
+                value={formData.model}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="year">Yıl</Label>
+              <Input
+                id="year"
+                name="year"
+                type="number"
+                value={formData.year}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="licensePlate">Plaka</Label>
+              <Input
+                id="licensePlate"
+                name="licensePlate"
+                value={formData.licensePlate}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <SheetFooter>
+              <SheetClose asChild>
+                <Button type="button" variant="outline" onClick={() => resetForm()}>
+                  İptal
+                </Button>
+              </SheetClose>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Ekleniyor..." : "Ekle"}
+              </Button>
+            </SheetFooter>
+          </form>
         </SheetContent>
       </Sheet>
 
       {/* Edit Vehicle Sheet */}
       <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <SheetContent className="w-full sm:max-w-md md:max-w-lg overflow-y-auto">
-          <SheetHeader className="border-b pb-4">
-            <div className="flex items-center justify-between">
-              <SheetTitle>Araç Düzenle</SheetTitle>
+        <SheetContent hideCloseButton={true}>
+          <SheetHeader>
+            <SheetTitle className="flex justify-between items-center">
+              <span>Araç Düzenle</span>
               <SheetClose asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" onClick={() => resetForm()}>
                   <X className="h-4 w-4" />
-                  <span className="sr-only">Kapat</span>
                 </Button>
               </SheetClose>
-            </div>
+            </SheetTitle>
           </SheetHeader>
-          <div className="px-6 py-6 overflow-y-auto">
-            {selectedVehicle && (
-              <form className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="edit-name">Araç Adı</Label>
-                    <Input 
-                      id="edit-name" 
-                      defaultValue={selectedVehicle.name} 
-                      className="mt-1 h-10" 
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-model">Model</Label>
-                    <Input 
-                      id="edit-model" 
-                      defaultValue={selectedVehicle.model} 
-                      className="mt-1 h-10" 
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-year">Yıl</Label>
-                    <Input 
-                      id="edit-year" 
-                      type="number" 
-                      defaultValue={selectedVehicle.year} 
-                      className="mt-1 h-10" 
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-licensePlate">Plaka</Label>
-                    <Input 
-                      id="edit-licensePlate" 
-                      defaultValue={selectedVehicle.licensePlate} 
-                      className="mt-1 h-10" 
-                    />
-                  </div>
-                </div>
-                <Button type="submit" className="w-full h-10">Güncelle</Button>
-              </form>
-            )}
-          </div>
+          <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Araç Adı</Label>
+              <Input
+                id="edit-name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-model">Model</Label>
+              <Input
+                id="edit-model"
+                name="model"
+                value={formData.model}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-year">Yıl</Label>
+              <Input
+                id="edit-year"
+                name="year"
+                type="number"
+                value={formData.year}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-licensePlate">Plaka</Label>
+              <Input
+                id="edit-licensePlate"
+                name="licensePlate"
+                value={formData.licensePlate}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <SheetFooter>
+              <SheetClose asChild>
+                <Button type="button" variant="outline" onClick={() => resetForm()}>
+                  İptal
+                </Button>
+              </SheetClose>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Güncelleniyor..." : "Güncelle"}
+              </Button>
+            </SheetFooter>
+          </form>
         </SheetContent>
       </Sheet>
     </div>

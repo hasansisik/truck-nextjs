@@ -24,6 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { register, getAllUsers, editUser, deleteUser, clearError } from "@/redux/actions/userActions";
+import DeleteConfirmation from "@/components/delete-confirmation";
 
 export default function UsersPage() {
   const dispatch = useAppDispatch();
@@ -108,9 +109,7 @@ export default function UsersPage() {
   };
 
   const handleDelete = (userId: string) => {
-    if (window.confirm("Bu kullanıcıyı silmek istediğinize emin misiniz?")) {
-      dispatch(deleteUser(userId));
-    }
+    dispatch(deleteUser(userId));
   };
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -242,13 +241,11 @@ export default function UsersPage() {
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(user._id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <DeleteConfirmation
+                        onDelete={() => handleDelete(user._id)}
+                        title="Kullanıcı Sil"
+                        description="Bu kullanıcıyı silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+                      />
                     </div>
                   </TableCell>
                 </TableRow>
@@ -260,7 +257,7 @@ export default function UsersPage() {
 
       {/* Add User Sheet */}
       <Sheet open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <SheetContent className="w-full sm:max-w-md md:max-w-lg overflow-y-auto">
+        <SheetContent className="w-full sm:max-w-md overflow-y-auto" hideCloseButton>
           <SheetHeader className="border-b pb-4">
             <div className="flex items-center justify-between">
               <SheetTitle>Yeni Kullanıcı Ekle</SheetTitle>
@@ -348,7 +345,7 @@ export default function UsersPage() {
 
       {/* Edit User Sheet */}
       <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <SheetContent className="w-full sm:max-w-md md:max-w-lg overflow-y-auto">
+        <SheetContent className="w-full sm:max-w-md overflow-y-auto" hideCloseButton>
           <SheetHeader className="border-b pb-4">
             <div className="flex items-center justify-between">
               <SheetTitle>Kullanıcı Düzenle</SheetTitle>
