@@ -38,28 +38,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navItems = [
     {
       title: "Çekici Yönetimi",
-      url: "/dashboard",
+      url: "/",
       icon: IconTruckDelivery,
     },
 
     {
       title: "Araç Yönetimi",
-      url: "/dashboard/vehicles",
+      url: "/vehicles",
       icon: IconTruck,
     },
     {
       title: "Şoför Yönetimi",
-      url: "/dashboard/drivers",
+      url: "/drivers",
       icon: IconUsers,
     },
     {
       title: "Firma Yönetimi",
-      url: "/dashboard/companies",
+      url: "/companies",
       icon: IconBuilding,
     },
     {
       title: "Kullanıcılar",
-      url: "/dashboard/users",
+      url: "/users",
       icon: IconUserPlus,
     },
   ];
@@ -73,7 +73,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <Link href="/dashboard">
+              <Link href="/">
                 <IconInnerShadowTop className="!size-5" />
                 <span className="text-base font-semibold">Çekici Yönetimi</span>
               </Link>

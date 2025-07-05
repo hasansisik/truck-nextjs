@@ -95,7 +95,7 @@ export default function VehiclesPage() {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Araçlar</h1>
         <Button onClick={() => setIsAddOpen(true)}>
@@ -201,13 +201,8 @@ export default function VehiclesPage() {
               />
             </div>
             <SheetFooter>
-              <SheetClose asChild>
-                <Button type="button" variant="outline" onClick={() => resetForm()}>
-                  İptal
-                </Button>
-              </SheetClose>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Ekleniyor..." : "Ekle"}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Kaydediliyor..." : "Kaydet"}
               </Button>
             </SheetFooter>
           </form>
@@ -270,12 +265,7 @@ export default function VehiclesPage() {
               />
             </div>
             <SheetFooter>
-              <SheetClose asChild>
-                <Button type="button" variant="outline" onClick={() => resetForm()}>
-                  İptal
-                </Button>
-              </SheetClose>
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Güncelleniyor..." : "Güncelle"}
               </Button>
             </SheetFooter>
