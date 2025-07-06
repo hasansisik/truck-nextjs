@@ -35,7 +35,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatDateTR } from "@/lib/utils";
 import { toast } from "sonner";
 
 const formSchema = z.object({
@@ -265,7 +265,7 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
                         disabled={loading || isSubmitting}
                       >
                         {field.value ? (
-                          format(field.value, "dd.MM.yyyy")
+                          formatDateTR(field.value)
                         ) : (
                           <span>Tarih seçiniz</span>
                         )}

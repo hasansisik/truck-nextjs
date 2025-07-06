@@ -1,9 +1,32 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { toast } from "sonner"
+import { format, isValid } from "date-fns"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+// Format date and time in Turkish format (DD.MM.YYYY HH:mm)
+export function formatDateTimeTR(date: Date | string | number): string {
+  try {
+    const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
+    if (!isValid(dateObj)) return '-';
+    return format(dateObj, 'dd.MM.yyyy HH:mm');
+  } catch (error) {
+    return '-';
+  }
+}
+
+// Format date only in Turkish format (DD.MM.YYYY)
+export function formatDateTR(date: Date | string | number): string {
+  try {
+    const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
+    if (!isValid(dateObj)) return '-';
+    return format(dateObj, 'dd.MM.yyyy');
+  } catch (error) {
+    return '-';
+  }
 }
 
 // Safe localStorage implementation that works with SSR

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import { formatDateTimeTR } from "@/lib/utils";
 
 interface TowDetailProps {
   tow: any;
@@ -56,7 +57,7 @@ export function TowDetail({ tow }: TowDetailProps) {
             <div>
               <p className="text-xs font-medium text-gray-500">Çekilme Tarihi</p>
               <p className="text-sm font-medium mt-1">
-                {format(new Date(tow.towDate), "dd.MM.yyyy")}
+                {formatDateTimeTR(new Date(tow.towDate))}
               </p>
             </div>
             <div>

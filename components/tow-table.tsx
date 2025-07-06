@@ -34,6 +34,7 @@ import { TowDetail } from "@/components/tow-detail";
 import { format } from "date-fns";
 import Image from "next/image";
 import DeleteConfirmation from "./delete-confirmation";
+import { formatDateTimeTR, formatDateTR } from "@/lib/utils";
 
 export function TowTable() {
   const dispatch = useAppDispatch();
@@ -83,9 +84,8 @@ export function TowTable() {
           tow.licensePlate,
           tow.company,
           tow.distance?.toString(),
-          format(new Date(tow.towDate), "dd.MM.yyyy"),
-          format(new Date(tow.towDate), "dd/MM/yyyy"),
-          format(new Date(tow.towDate), "yyyy-MM-dd"),
+          formatDateTR(new Date(tow.towDate)),
+          formatDateTimeTR(new Date(tow.towDate)),
           tow.towDate,
         ];
 
@@ -325,7 +325,7 @@ export function TowTable() {
                   <TableCell>{tow.driver}</TableCell>
                   <TableCell>{tow.licensePlate}</TableCell>
                   <TableCell>
-                    {format(new Date(tow.towDate), "dd.MM.yyyy")}
+                    {formatDateTimeTR(new Date(tow.towDate))}
                   </TableCell>
                   <TableCell>{tow.distance}</TableCell>
                   <TableCell>{tow.company}</TableCell>

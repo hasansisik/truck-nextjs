@@ -18,9 +18,8 @@ import {
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Pencil, X, Truck, Users, Building } from "lucide-react";
+import { X, Truck, Users, Building } from "lucide-react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { safeLocalStorage } from "@/lib/utils";
 import axios from "axios";
 import { server } from "@/config";
@@ -28,8 +27,7 @@ import { logout } from "@/redux/actions/userActions";
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
-  const router = useRouter();
-  const { isAuthenticated } = useAppSelector((state) => state.user);
+
   const [isVehicleOpen, setIsVehicleOpen] = useState(false);
   const [isDriverOpen, setIsDriverOpen] = useState(false);
   const [isCompanyOpen, setIsCompanyOpen] = useState(false);
