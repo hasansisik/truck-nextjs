@@ -6,16 +6,15 @@ import { getAllCompanies, createCompany, updateCompany, deleteCompany } from "@/
 import { Company } from "@/redux/reducers/companyReducer";
 import { Button } from "@/components/ui/button";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Pencil, X } from "lucide-react";
+import { PlusCircle, Pencil } from "lucide-react";
 import DeleteConfirmation from "@/components/delete-confirmation";
 
 export default function CompaniesPage() {
@@ -141,19 +140,12 @@ export default function CompaniesPage() {
         </div>
       )}
 
-      {/* Add Company Sheet */}
-      <Sheet open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <SheetContent hideCloseButton={true}>
-          <SheetHeader>
-            <SheetTitle className="flex justify-between items-center">
-              <span>Yeni Firma Ekle</span>
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon" onClick={() => resetForm()}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </SheetClose>
-            </SheetTitle>
-          </SheetHeader>
+      {/* Add Company Dialog */}
+      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Yeni Firma Ekle</DialogTitle>
+          </DialogHeader>
           <form onSubmit={handleAddSubmit} className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="name">Firma Adı</Label>
@@ -196,28 +188,21 @@ export default function CompaniesPage() {
                 required
               />
             </div>
-            <SheetFooter>
+            <DialogFooter>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Kaydediliyor..." : "Kaydet"}
               </Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
-      {/* Edit Company Sheet */}
-      <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <SheetContent hideCloseButton={true}>
-          <SheetHeader>
-            <SheetTitle className="flex justify-between items-center">
-              <span>Firma Düzenle</span>
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon" onClick={() => resetForm()}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </SheetClose>
-            </SheetTitle>
-          </SheetHeader>
+      {/* Edit Company Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Firma Düzenle</DialogTitle>
+          </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="edit-name">Firma Adı</Label>
@@ -260,14 +245,14 @@ export default function CompaniesPage() {
                 required
               />
             </div>
-            <SheetFooter>
+            <DialogFooter>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Güncelleniyor..." : "Güncelle"}
               </Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

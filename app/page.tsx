@@ -9,16 +9,15 @@ import { createDriver } from "@/redux/actions/driverActions";
 import { createCompany } from "@/redux/actions/companyActions";
 import { Button } from "@/components/ui/button";
 import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetClose,
-  SheetFooter 
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X, Truck, Users, Building } from "lucide-react";
+import { Truck, Users, Building } from "lucide-react";
 import { toast } from "sonner";
 import { safeLocalStorage } from "@/lib/utils";
 import axios from "axios";
@@ -250,19 +249,12 @@ export default function HomePage() {
       
       <TowTable />
       
-      {/* Quick Add Vehicle Sheet */}
-      <Sheet open={isVehicleOpen} onOpenChange={setIsVehicleOpen}>
-        <SheetContent hideCloseButton={true}>
-          <SheetHeader>
-            <SheetTitle className="flex justify-between items-center">
-              <span>Yeni Araç Ekle</span>
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon" onClick={() => resetVehicleForm()}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </SheetClose>
-            </SheetTitle>
-          </SheetHeader>
+      {/* Quick Add Vehicle Dialog */}
+      <Dialog open={isVehicleOpen} onOpenChange={setIsVehicleOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Yeni Araç Ekle</DialogTitle>
+          </DialogHeader>
           <form onSubmit={handleVehicleSubmit} className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="name">Araç Adı</Label>
@@ -309,26 +301,19 @@ export default function HomePage() {
                 required
               />
             </div>
-            <SheetFooter>
+            <DialogFooter>
               <Button type="submit" className="w-full">Kaydet</Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
       
-      {/* Quick Add Driver Sheet */}
-      <Sheet open={isDriverOpen} onOpenChange={setIsDriverOpen}>
-        <SheetContent hideCloseButton={true}>
-          <SheetHeader>
-            <SheetTitle className="flex justify-between items-center">
-              <span>Yeni Şoför Ekle</span>
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon" onClick={() => resetDriverForm()}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </SheetClose>
-            </SheetTitle>
-          </SheetHeader>
+      {/* Quick Add Driver Dialog */}
+      <Dialog open={isDriverOpen} onOpenChange={setIsDriverOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Yeni Şoför Ekle</DialogTitle>
+          </DialogHeader>
           <form onSubmit={handleDriverSubmit} className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="driverName">Şoför Adı</Label>
@@ -375,26 +360,19 @@ export default function HomePage() {
                 required
               />
             </div>
-            <SheetFooter>
+            <DialogFooter>
               <Button type="submit" className="w-full">Kaydet</Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
       
-      {/* Quick Add Company Sheet */}
-      <Sheet open={isCompanyOpen} onOpenChange={setIsCompanyOpen}>
-        <SheetContent hideCloseButton={true}>
-          <SheetHeader>
-            <SheetTitle className="flex justify-between items-center">
-              <span>Yeni Firma Ekle</span>
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon" onClick={() => resetCompanyForm()}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </SheetClose>
-            </SheetTitle>
-          </SheetHeader>
+      {/* Quick Add Company Dialog */}
+      <Dialog open={isCompanyOpen} onOpenChange={setIsCompanyOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Yeni Firma Ekle</DialogTitle>
+          </DialogHeader>
           <form onSubmit={handleCompanySubmit} className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="companyName">Firma Adı</Label>
@@ -441,12 +419,12 @@ export default function HomePage() {
                 required
               />
             </div>
-            <SheetFooter>
+            <DialogFooter>
               <Button type="submit" className="w-full">Kaydet</Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

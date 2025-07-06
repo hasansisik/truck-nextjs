@@ -6,16 +6,15 @@ import { getAllVehicles, createVehicle, updateVehicle, deleteVehicle } from "@/r
 import { Vehicle } from "@/redux/reducers/vehicleReducer";
 import { Button } from "@/components/ui/button";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Pencil, X } from "lucide-react";
+import { PlusCircle, Pencil } from "lucide-react";
 import DeleteConfirmation from "@/components/delete-confirmation";
 
 export default function VehiclesPage() {
@@ -145,19 +144,12 @@ export default function VehiclesPage() {
         </div>
       )}
 
-      {/* Add Vehicle Sheet */}
-      <Sheet open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <SheetContent hideCloseButton={true}>
-          <SheetHeader>
-            <SheetTitle className="flex justify-between items-center">
-              <span>Yeni Araç Ekle</span>
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon" onClick={() => resetForm()}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </SheetClose>
-            </SheetTitle>
-          </SheetHeader>
+      {/* Add Vehicle Dialog */}
+      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Yeni Araç Ekle</DialogTitle>
+          </DialogHeader>
           <form onSubmit={handleAddSubmit} className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="name">Araç Adı</Label>
@@ -200,28 +192,21 @@ export default function VehiclesPage() {
                 required
               />
             </div>
-            <SheetFooter>
+            <DialogFooter>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Kaydediliyor..." : "Kaydet"}
               </Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
-      {/* Edit Vehicle Sheet */}
-      <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <SheetContent hideCloseButton={true}>
-          <SheetHeader>
-            <SheetTitle className="flex justify-between items-center">
-              <span>Araç Düzenle</span>
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon" onClick={() => resetForm()}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </SheetClose>
-            </SheetTitle>
-          </SheetHeader>
+      {/* Edit Vehicle Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Araç Düzenle</DialogTitle>
+          </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="edit-name">Araç Adı</Label>
@@ -264,14 +249,14 @@ export default function VehiclesPage() {
                 required
               />
             </div>
-            <SheetFooter>
+            <DialogFooter>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Güncelleniyor..." : "Güncelle"}
               </Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

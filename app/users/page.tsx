@@ -11,13 +11,12 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetClose 
-} from "@/components/ui/sheet";
-import { Plus, Edit, Trash2, X, Check, ShieldAlert } from "lucide-react";
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
+import { Plus, Edit, Trash2, Check, ShieldAlert } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -25,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { register, getAllUsers, editUser, deleteUser, clearError } from "@/redux/actions/userActions";
 import DeleteConfirmation from "@/components/delete-confirmation";
+import { DialogClose } from "@radix-ui/react-dialog";
 
 export default function UsersPage() {
   const dispatch = useAppDispatch();
@@ -279,11 +279,11 @@ export default function UsersPage() {
       </div>
 
       {/* Add User Sheet */}
-      <Sheet open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Yeni Kullanıcı Ekle</SheetTitle>
-          </SheetHeader>
+      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Yeni Kullanıcı Ekle</DialogTitle>
+          </DialogHeader>
           <form onSubmit={handleAddSubmit} className="space-y-4 py-4">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
@@ -336,25 +336,25 @@ export default function UsersPage() {
               </select>
             </div>
             <div className="pt-4 flex justify-end space-x-2">
-              <SheetClose asChild>
+              <DialogClose asChild>
                 <Button type="button" variant="outline">
                   İptal
                 </Button>
-              </SheetClose>
+              </DialogClose>
               <Button type="submit" disabled={loading}>
                 {loading ? "Kaydediliyor..." : "Kaydet"}
               </Button>
             </div>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit User Sheet */}
-      <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Kullanıcı Düzenle</SheetTitle>
-          </SheetHeader>
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Kullanıcı Düzenle</DialogTitle>
+          </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
@@ -419,18 +419,18 @@ export default function UsersPage() {
               </select>
             </div>
             <div className="pt-4 flex justify-end space-x-2">
-              <SheetClose asChild>
+              <DialogClose asChild>
                 <Button type="button" variant="outline">
                   İptal
                 </Button>
-              </SheetClose>
+              </DialogClose>
               <Button type="submit" disabled={loading}>
                 {loading ? "Güncelleniyor..." : "Güncelle"}
               </Button>
             </div>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

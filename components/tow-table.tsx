@@ -22,13 +22,11 @@ import { Edit, Eye, Plus, X, ImageIcon, Search, Filter } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { deleteTow, getAllTows } from "@/redux/actions/towActions";
 import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetClose,
-  SheetFooter
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { TowForm } from "@/components/tow-form";
 import { TowDetail } from "@/components/tow-detail";
 import { format } from "date-fns";
@@ -360,63 +358,42 @@ export function TowTable() {
       </div>
 
       {/* Create Form */}
-      <Sheet open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <SheetContent hideCloseButton={true}>
-          <SheetHeader>
-            <SheetTitle className="flex justify-between items-center">
-              <span>Yeni Çekme Kaydı</span>
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon">
-                  <X className="h-4 w-4" />
-                </Button>
-              </SheetClose>
-            </SheetTitle>
-          </SheetHeader>
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl w-full">
+          <DialogHeader>
+            <DialogTitle>Yeni Çekme Kaydı</DialogTitle>
+          </DialogHeader>
           <div className="py-4 overflow-y-auto">
             <TowForm onSuccess={onCreateSuccess} />
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Form */}
-      <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <SheetContent hideCloseButton={true}>
-          <SheetHeader>
-            <SheetTitle className="flex justify-between items-center">
-              <span>Çekme Kaydı Düzenle</span>
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon">
-                  <X className="h-4 w-4" />
-                </Button>
-              </SheetClose>
-            </SheetTitle>
-          </SheetHeader>
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl w-full">
+          <DialogHeader>
+            <DialogTitle>Çekme Kaydı Düzenle</DialogTitle>
+          </DialogHeader>
           <div className="py-4 overflow-y-auto">
             {selectedTow && (
               <TowForm tow={selectedTow} onSuccess={onEditSuccess} />
             )}
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       {/* View Details */}
-      <Sheet open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <SheetContent hideCloseButton={true}>
-          <SheetHeader>
-            <SheetTitle className="flex justify-between items-center">
-              <span>Çekme Kaydı Detayları</span>
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon">
-                  <X className="h-4 w-4" />
-                </Button>
-              </SheetClose>
-            </SheetTitle>
-          </SheetHeader>
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl w-full">
+          <DialogHeader>
+            <DialogTitle>Çekme Kaydı Detayları</DialogTitle>
+          </DialogHeader>
           <div className="py-4 overflow-y-auto">
             {selectedTow && <TowDetail tow={selectedTow} />}
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

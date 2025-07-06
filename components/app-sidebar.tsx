@@ -22,12 +22,16 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { useAppSelector } from "@/redux/hook"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const { user, isAuthenticated } = useAppSelector((state) => state.user);
+  const isMobile = useIsMobile();
+  const { setOpenMobile } = useSidebar();
   
   const userData = {
     name: user?.name || "Kullanıcı",
@@ -64,6 +68,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
   ];
 
+  const handleNavItemClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -72,6 +82,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
+              onClick={handleNavItemClick}
             >
               <Link href="/">
                 <IconInnerShadowTop className="!size-5" />
@@ -88,6 +99,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuButton
                 asChild
                 active={pathname === item.url}
+                onClick={handleNavItemClick}
               >
                 <Link href={item.url}>
                   <item.icon className="h-5 w-5" />
