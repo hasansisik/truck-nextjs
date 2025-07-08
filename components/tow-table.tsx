@@ -82,6 +82,7 @@ export function TowTable() {
           tow.licensePlate,
           tow.company,
           tow.distance?.toString(),
+          tow.serviceFee?.toString(),
           formatDateTR(new Date(tow.towDate)),
           formatDateTimeTR(new Date(tow.towDate)),
           tow.towDate,
@@ -169,7 +170,7 @@ export function TowTable() {
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Araç, şoför, plaka, firma, tarih veya mesafe ara..."
+            placeholder="Araç, şoför, plaka, firma, tarih, mesafe veya hizmet bedeli ara..."
             value={searchTerm}
             onChange={handleSearchChange}
             className="pl-10 pr-10"
@@ -278,6 +279,7 @@ export function TowTable() {
               <TableHead>Plaka</TableHead>
               <TableHead>Tarih</TableHead>
               <TableHead>Mesafe (km)</TableHead>
+              <TableHead>Hizmet Bedeli (₺)</TableHead>
               <TableHead>Firma</TableHead>
               <TableHead className="text-right">İşlemler</TableHead>
             </TableRow>
@@ -285,13 +287,13 @@ export function TowTable() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-4">
+                <TableCell colSpan={9} className="text-center py-4">
                   Yükleniyor...
                 </TableCell>
               </TableRow>
             ) : filteredTows?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-4">
+                <TableCell colSpan={9} className="text-center py-4">
                   {hasActiveFilters ? "Arama ve filtre kriterlerinize uygun kayıt bulunamadı" : "Kayıt bulunamadı"}
                 </TableCell>
               </TableRow>
@@ -326,6 +328,7 @@ export function TowTable() {
                     {formatDateTimeTR(new Date(tow.towDate))}
                   </TableCell>
                   <TableCell>{tow.distance}</TableCell>
+                  <TableCell>{tow.serviceFee ? `${tow.serviceFee.toFixed(2)} ₺` : '-'}</TableCell>
                   <TableCell>{tow.company}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">

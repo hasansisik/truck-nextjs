@@ -45,6 +45,7 @@ const formSchema = z.object({
   towDate: z.date({ required_error: "Çekilme tarihi gereklidir" }),
   distance: z.coerce.number().min(0, { message: "Mesafe bilgisi gereklidir" }),
   company: z.string().min(1, { message: "Firma bilgisi gereklidir" }),
+  serviceFee: z.coerce.number().min(0).optional(),
   images: z.array(z.string()).optional(),
 });
 
@@ -88,12 +89,14 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
       towDate: new Date(),
       distance: 0,
       company: "",
+      serviceFee: 0,
       images: [],
     },
   });
 
   useEffect(() => {
     if (tow) {
+      // Reset form with proper values
       form.reset({
         towTruck: tow.towTruck || "",
         driver: tow.driver || "",
@@ -101,6 +104,7 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
         towDate: tow.towDate ? new Date(tow.towDate) : new Date(),
         distance: tow.distance || 0,
         company: tow.company || "",
+        serviceFee: tow.serviceFee || 0,
         images: tow.images || [],
       });
       
@@ -174,8 +178,8 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
                 <Select 
                   disabled={loading || isSubmitting} 
                   onValueChange={field.onChange} 
-                  defaultValue={field.value}
                   value={field.value}
+                  key={`towTruck-${field.value}`}
                 >
                   <FormControl>
                     <SelectTrigger className="w-full h-10">
@@ -207,8 +211,8 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
                 <Select 
                   disabled={loading || isSubmitting} 
                   onValueChange={field.onChange} 
-                  defaultValue={field.value}
                   value={field.value}
+                  key={`driver-${field.value}`}
                 >
                   <FormControl>
                     <SelectTrigger className="w-full h-10">
@@ -317,6 +321,29 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
 
         <FormField
           control={form.control}
+          name="serviceFee"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-medium">Hizmet Bedeli (₺) - İsteğe bağlı</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  {...field}
+                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                  disabled={loading || isSubmitting}
+                  className="w-full h-10"
+                  placeholder="0.00"
+                />
+              </FormControl>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="company"
           render={({ field }) => (
             <FormItem>
@@ -324,8 +351,8 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
               <Select 
                 disabled={loading || isSubmitting} 
                 onValueChange={field.onChange} 
-                defaultValue={field.value}
                 value={field.value}
+                key={`company-${field.value}`}
               >
                 <FormControl>
                   <SelectTrigger className="w-full h-10">

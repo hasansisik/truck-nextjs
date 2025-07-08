@@ -13,6 +13,7 @@ export interface TowPayload {
   towDate: string;
   distance: number;
   company: string;
+  serviceFee?: number;
   images: string[];
 }
 

@@ -64,6 +64,12 @@ export function TowDetail({ tow }: TowDetailProps) {
               <p className="text-xs font-medium text-gray-500">Mesafe (km)</p>
               <p className="text-sm font-medium mt-1">{tow.distance}</p>
             </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500">Hizmet Bedeli</p>
+              <p className="text-sm font-medium mt-1">
+                {tow.serviceFee ? `${tow.serviceFee.toFixed(2)} ₺` : 'Belirtilmemiş'}
+              </p>
+            </div>
           </div>
         </div>
       </div>
