@@ -5,6 +5,7 @@ import towReducer from "./reducers/towReducer";
 import { vehicleReducer } from './reducers/vehicleReducer';
 import { driverReducer } from './reducers/driverReducer';
 import { companyReducer } from './reducers/companyReducer';
+import { expenseReducer } from './reducers/expenseReducer';
 
 export const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ export const store = configureStore({
     vehicle: vehicleReducer,
     driver: driverReducer,
     company: companyReducer,
+    expense: expenseReducer,
   },
   devTools: process.env.NODE_ENV !== 'production',
   middleware: (getDefaultMiddleware) =>

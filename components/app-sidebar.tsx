@@ -11,6 +11,8 @@ import {
   IconUsers,
   IconBuilding,
   IconUserPlus,
+  IconReceipt,
+  IconReport,
 } from "@tabler/icons-react"
 
 import { NavUser } from "@/components/nav-user"
@@ -41,11 +43,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   
   const navItems = [
     {
+      title: "Raporlar",
+      url: "/raporlar",
+      icon: IconReport,
+    },
+    {
       title: "Çekici Yönetimi",
       url: "/",
       icon: IconTruckDelivery,
     },
-
+    {
+      title: "Masraf Yönetimi",
+      url: "/masraflar",
+      icon: IconReceipt,
+    },
     {
       title: "Araç Yönetimi",
       url: "/vehicles",
