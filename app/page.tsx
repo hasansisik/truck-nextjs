@@ -26,6 +26,7 @@ import { logout } from "@/redux/actions/userActions";
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.user);
 
   const [isVehicleOpen, setIsVehicleOpen] = useState(false);
   const [isDriverOpen, setIsDriverOpen] = useState(false);
@@ -213,6 +214,21 @@ export default function HomePage() {
         <p className="text-gray-500">
           Araç çekme işlemlerinizi bu sayfadan yönetebilirsiniz.
         </p>
+        {user?.role === 'user' && (
+          <div className="mt-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm inline-block">
+            Kullanıcı: Sadece kendi kayıtlarınızı görüntüleyebilirsiniz
+          </div>
+        )}
+        {user?.role === 'admin' && (
+          <div className="mt-2 px-3 py-1 bg-green-100 text-green-800 rounded-md text-sm inline-block">
+            Admin: Şirket içi tüm kayıtları görüntüleyebilirsiniz
+          </div>
+        )}
+        {user?.role === 'superadmin' && (
+          <div className="mt-2 px-3 py-1 bg-purple-100 text-purple-800 rounded-md text-sm inline-block">
+            Süper Admin: Tüm yetkilere sahipsiniz
+          </div>
+        )}
         
         <div className="flex flex-wrap gap-3 mt-4">
           <Button 

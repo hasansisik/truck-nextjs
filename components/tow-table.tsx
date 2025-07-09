@@ -37,6 +37,7 @@ import { formatDateTimeTR, formatDateTR } from "@/lib/utils";
 export function TowTable() {
   const dispatch = useAppDispatch();
   const { tows, loading } = useAppSelector((state) => state.tow);
+  const { user } = useAppSelector((state) => state.user);
   
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -188,74 +189,80 @@ export function TowTable() {
         </div>
 
         {/* Filter Dropdowns */}
-        <div className="flex flex-wrap gap-3 items-center">
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">Filtrele:</span>
           </div>
           
-          <Select value={selectedDriver} onValueChange={setSelectedDriver}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Şoför seç" />
-            </SelectTrigger>
-            <SelectContent>
-              {filterOptions.drivers.map((driver) => (
-                <SelectItem key={driver} value={driver}>
-                  {driver}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Responsive Filter Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <Select value={selectedDriver} onValueChange={setSelectedDriver}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Şoför seç" />
+              </SelectTrigger>
+              <SelectContent>
+                {filterOptions.drivers.map((driver) => (
+                  <SelectItem key={driver} value={driver}>
+                    {driver}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Firma seç" />
-            </SelectTrigger>
-            <SelectContent>
-              {filterOptions.companies.map((company) => (
-                <SelectItem key={company} value={company}>
-                  {company}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Firma seç" />
+              </SelectTrigger>
+              <SelectContent>
+                {filterOptions.companies.map((company) => (
+                  <SelectItem key={company} value={company}>
+                    {company}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          <Select value={selectedPlate} onValueChange={setSelectedPlate}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Plaka seç" />
-            </SelectTrigger>
-            <SelectContent>
-              {filterOptions.plates.map((plate) => (
-                <SelectItem key={plate} value={plate}>
-                  {plate}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <Select value={selectedPlate} onValueChange={setSelectedPlate}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Plaka seç" />
+              </SelectTrigger>
+              <SelectContent>
+                {filterOptions.plates.map((plate) => (
+                  <SelectItem key={plate} value={plate}>
+                    {plate}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          <Select value={selectedVehicle} onValueChange={setSelectedVehicle}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Araç seç" />
-            </SelectTrigger>
-            <SelectContent>
-              {filterOptions.vehicles.map((vehicle) => (
-                <SelectItem key={vehicle} value={vehicle}>
-                  {vehicle}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <Select value={selectedVehicle} onValueChange={setSelectedVehicle}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Araç seç" />
+              </SelectTrigger>
+              <SelectContent>
+                {filterOptions.vehicles.map((vehicle) => (
+                  <SelectItem key={vehicle} value={vehicle}>
+                    {vehicle}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
+          {/* Clear Filters Button */}
           {hasActiveFilters && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={clearAllFilters}
-              className="text-muted-foreground"
-            >
-              <X className="h-4 w-4 mr-1" />
-              Filtreleri Temizle
-            </Button>
+            <div className="flex justify-start">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearAllFilters}
+                className="text-muted-foreground"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Filtreleri Temizle
+              </Button>
+            </div>
           )}
         </div>
 
@@ -281,19 +288,22 @@ export function TowTable() {
               <TableHead>Mesafe (km)</TableHead>
               <TableHead>Hizmet Bedeli (₺)</TableHead>
               <TableHead>Firma</TableHead>
+              {(user?.role === 'admin' || user?.role === 'superadmin') && (
+                <TableHead>Oluşturan</TableHead>
+              )}
               <TableHead className="text-right">İşlemler</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-4">
+                <TableCell colSpan={user?.role === 'admin' || user?.role === 'superadmin' ? 10 : 9} className="text-center py-4">
                   Yükleniyor...
                 </TableCell>
               </TableRow>
             ) : filteredTows?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-4">
+                <TableCell colSpan={user?.role === 'admin' || user?.role === 'superadmin' ? 10 : 9} className="text-center py-4">
                   {hasActiveFilters ? "Arama ve filtre kriterlerinize uygun kayıt bulunamadı" : "Kayıt bulunamadı"}
                 </TableCell>
               </TableRow>
@@ -330,6 +340,9 @@ export function TowTable() {
                   <TableCell>{tow.distance}</TableCell>
                   <TableCell>{tow.serviceFee ? `${tow.serviceFee.toFixed(2)} ₺` : '-'}</TableCell>
                   <TableCell>{tow.company}</TableCell>
+                  {(user?.role === 'admin' || user?.role === 'superadmin') && (
+                    <TableCell>{tow.userId?.name || 'Bilinmiyor'}</TableCell>
+                  )}
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button
@@ -346,11 +359,14 @@ export function TowTable() {
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <DeleteConfirmation
-                        onDelete={() => handleDelete(tow._id)}
-                        title="Çekme Kaydını Sil"
-                        description="Bu çekme kaydını silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
-                      />
+                      {/* Only superadmin can delete */}
+                      {user?.role === 'superadmin' && (
+                        <DeleteConfirmation
+                          onDelete={() => handleDelete(tow._id)}
+                          title="Çekme Kaydını Sil"
+                          description="Bu çekme kaydını silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+                        />
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

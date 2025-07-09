@@ -19,6 +19,13 @@ import {
 import { Plus, Edit, Trash2, Check, ShieldAlert } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
@@ -324,16 +331,15 @@ export default function UsersPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Rol</Label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleInputChange}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="user">Kullanıcı</option>
-                <option value="admin">Admin</option>
-              </select>
+              <Select value={formData.role} onValueChange={(value) => setFormData({...formData, role: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Rol seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">Kullanıcı</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="pt-4 flex justify-end space-x-2">
               <DialogClose asChild>
@@ -394,29 +400,27 @@ export default function UsersPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-role">Rol</Label>
-              <select
-                id="edit-role"
-                name="role"
-                value={editFormData.role}
-                onChange={handleEditInputChange}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="user">Kullanıcı</option>
-                <option value="admin">Admin</option>
-              </select>
+              <Select value={editFormData.role} onValueChange={(value) => setEditFormData({...editFormData, role: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Rol seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">Kullanıcı</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-status">Durum</Label>
-              <select
-                id="edit-status"
-                name="status"
-                value={editFormData.status}
-                onChange={handleEditInputChange}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="active">Aktif</option>
-                <option value="inactive">Pasif</option>
-              </select>
+              <Select value={editFormData.status} onValueChange={(value) => setEditFormData({...editFormData, status: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Durum seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Aktif</SelectItem>
+                  <SelectItem value="inactive">Pasif</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="pt-4 flex justify-end space-x-2">
               <DialogClose asChild>

@@ -19,11 +19,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Calendar, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ExpenseForm } from "@/components/expense-form";
 import { formatDateTimeTR } from "@/lib/utils";
 import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 // Transform data for the existing DataTable component
 const transformToTableData = (expenses: any[], tows: any[]) => {
@@ -73,28 +78,82 @@ export default function Page() {
   const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  // Set default date range to current month (1st to today)
+  const getCurrentMonthRange = () => {
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    return {
+      from: firstDayOfMonth,
+      to: today
+    };
+  };
+
+  const [dateRange, setDateRange] = useState<{
+    from: Date | undefined;
+    to: Date | undefined;
+  }>(getCurrentMonthRange());
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   useEffect(() => {
     dispatch(getAllExpenses());
     dispatch(getAllTows());
   }, [dispatch]);
 
-  // Calculate totals
+  // Filter data by date range
+  const filteredExpenses = useMemo(() => {
+    if (!expenses) return [];
+    
+    return expenses.filter((expense) => {
+      const expenseDate = new Date(expense.date);
+      const from = dateRange.from ? new Date(dateRange.from.getFullYear(), dateRange.from.getMonth(), dateRange.from.getDate()) : null;
+      const to = dateRange.to ? new Date(dateRange.to.getFullYear(), dateRange.to.getMonth(), dateRange.to.getDate(), 23, 59, 59) : null;
+      
+      if (from && to) {
+        return expenseDate >= from && expenseDate <= to;
+      } else if (from) {
+        return expenseDate >= from;
+      } else if (to) {
+        return expenseDate <= to;
+      }
+      return true;
+    });
+  }, [expenses, dateRange]);
+
+  const filteredTows = useMemo(() => {
+    if (!tows) return [];
+    
+    return tows.filter((tow) => {
+      const towDate = new Date(tow.towDate);
+      const from = dateRange.from ? new Date(dateRange.from.getFullYear(), dateRange.from.getMonth(), dateRange.from.getDate()) : null;
+      const to = dateRange.to ? new Date(dateRange.to.getFullYear(), dateRange.to.getMonth(), dateRange.to.getDate(), 23, 59, 59) : null;
+      
+      if (from && to) {
+        return towDate >= from && towDate <= to;
+      } else if (from) {
+        return towDate >= from;
+      } else if (to) {
+        return towDate <= to;
+      }
+      return true;
+    });
+  }, [tows, dateRange]);
+
+  // Calculate totals with filtered data
   const totalExpenses = useMemo(() => {
-    return expenses?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0;
-  }, [expenses]);
+    return filteredExpenses?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0;
+  }, [filteredExpenses]);
 
   const totalIncome = useMemo(() => {
-    return tows?.reduce((sum, tow) => sum + (tow.serviceFee || 0), 0) || 0;
-  }, [tows]);
+    return filteredTows?.reduce((sum, tow) => sum + (tow.serviceFee || 0), 0) || 0;
+  }, [filteredTows]);
 
   const netProfit = totalIncome - totalExpenses;
   const profitMargin = totalIncome > 0 ? ((netProfit / totalIncome) * 100) : 0;
 
-  // Transform data for DataTable
+  // Transform data for DataTable with filtered data
   const allTableData = useMemo(() => {
-    return transformToTableData(expenses || [], tows || []);
-  }, [expenses, tows]);
+    return transformToTableData(filteredExpenses || [], filteredTows || []);
+  }, [filteredExpenses, filteredTows]);
 
   // Filter data based on active tab and search term
   const filteredTableData = useMemo(() => {
@@ -142,6 +201,21 @@ export default function Page() {
     setSearchTerm("");
   };
 
+  const clearDateRange = () => {
+    setDateRange(getCurrentMonthRange());
+  };
+
+  const formatDateRange = () => {
+    if (dateRange.from && dateRange.to) {
+      return `${format(dateRange.from, "dd MMM yyyy", { locale: tr })} - ${format(dateRange.to, "dd MMM yyyy", { locale: tr })}`;
+    } else if (dateRange.from) {
+      return `${format(dateRange.from, "dd MMM yyyy", { locale: tr })} - ...`;
+    } else if (dateRange.to) {
+      return `... - ${format(dateRange.to, "dd MMM yyyy", { locale: tr })}`;
+    }
+    return "Tarih seçin";
+  };
+
   if (expensesLoading || towsLoading) {
     return (
       <div className="container mx-auto p-4">
@@ -156,11 +230,63 @@ export default function Page() {
   return (
     <div className="container mx-auto p-4 space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Finansal Raporlar</h1>
-        <p className="text-gray-500">
-          Gelir ve gider raporlarınızı bu sayfadan görüntüleyebilirsiniz.
-        </p>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Finansal Raporlar</h1>
+          <p className="text-gray-500">
+            Gelir ve gider raporlarınızı bu sayfadan görüntüleyebilirsiniz.
+          </p>
+        </div>
+        
+        {/* Date Range Picker */}
+        <div className="flex items-center gap-2">
+          <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+            <PopoverTrigger asChild>
+                             <Button
+                 variant="outline"
+                 className="w-[280px] justify-start text-left font-normal"
+               >
+                <Calendar className="mr-2 h-4 w-4" />
+                {formatDateRange()}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <CalendarComponent
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange.from}
+                selected={dateRange}
+                onSelect={(range) => {
+                  setDateRange({
+                    from: range?.from,
+                    to: range?.to
+                  });
+                }}
+                numberOfMonths={2}
+                locale={tr}
+              />
+              <div className="p-3 border-t">
+                                 <Button
+                   variant="outline"
+                   className="w-full"
+                   onClick={clearDateRange}
+                 >
+                   Bu Aya Sıfırla
+                 </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          
+                     <Button
+             variant="ghost"
+             size="icon"
+             onClick={clearDateRange}
+             className="h-10 w-10"
+             title="Bu aya sıfırla"
+           >
+             <X className="h-4 w-4" />
+           </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -173,7 +299,7 @@ export default function Page() {
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{totalIncome.toFixed(2)} ₺</div>
             <p className="text-xs text-muted-foreground">
-              {tows?.length || 0} çekici hizmeti
+              {filteredTows?.length || 0} çekici hizmeti
             </p>
           </CardContent>
         </Card>
@@ -186,7 +312,7 @@ export default function Page() {
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{totalExpenses.toFixed(2)} ₺</div>
             <p className="text-xs text-muted-foreground">
-              {expenses?.length || 0} gider kaydı
+              {filteredExpenses?.length || 0} gider kaydı
             </p>
           </CardContent>
         </Card>
@@ -251,7 +377,7 @@ export default function Page() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {expenses?.slice(0, 5).map((expense: any) => (
+                  {filteredExpenses?.slice(0, 5).map((expense: any) => (
                     <TableRow key={expense._id}>
                       <TableCell className="font-medium">{expense.name}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
@@ -262,10 +388,10 @@ export default function Page() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {(!expenses || expenses.length === 0) && (
+                  {(!filteredExpenses || filteredExpenses.length === 0) && (
                     <TableRow>
                       <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
-                        Gider kaydı bulunamadı
+                                                 Seçilen tarih aralığında gider kaydı bulunamadı
                       </TableCell>
                     </TableRow>
                   )}
@@ -294,7 +420,7 @@ export default function Page() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {tows?.slice(0, 5).map((tow: any) => (
+                  {filteredTows?.slice(0, 5).map((tow: any) => (
                     <TableRow key={tow._id}>
                       <TableCell className="font-medium">
                         {tow.towTruck} - {tow.licensePlate}
@@ -307,10 +433,10 @@ export default function Page() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {(!tows || tows.length === 0) && (
+                  {(!filteredTows || filteredTows.length === 0) && (
                     <TableRow>
                       <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
-                        Gelir kaydı bulunamadı
+                                                 Seçilen tarih aralığında gelir kaydı bulunamadı
                       </TableCell>
                     </TableRow>
                   )}
