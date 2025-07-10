@@ -38,7 +38,7 @@ const DeleteConfirmation = ({
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant={variant} size={size} disabled={isLoading || disabled}>
-          <Trash2 className="h-4 w-4 mr-1" /> Sil
+          <Trash2 className="h-4 w-4 mr-1" /> 
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>

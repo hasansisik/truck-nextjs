@@ -18,14 +18,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Edit, Eye, Plus, X, ImageIcon, Search, Filter } from "lucide-react";
+import { Edit, Eye, Plus, X, ImageIcon, Search, Filter, DollarSign } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
-import { deleteTow, getAllTows } from "@/redux/actions/towActions";
+import { deleteTow, getAllTows, updateTow } from "@/redux/actions/towActions";
 import { 
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { TowForm } from "@/components/tow-form";
 import { TowDetail } from "@/components/tow-detail";
@@ -33,6 +34,7 @@ import { format } from "date-fns";
 import Image from "next/image";
 import DeleteConfirmation from "./delete-confirmation";
 import { formatDateTimeTR, formatDateTR } from "@/lib/utils";
+import { Label } from "./ui/label";
 
 export function TowTable() {
   const dispatch = useAppDispatch();
@@ -42,8 +44,10 @@ export function TowTable() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isPriceUpdateOpen, setIsPriceUpdateOpen] = useState(false);
   const [selectedTow, setSelectedTow] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [priceValue, setPriceValue] = useState<number | string>("");
   
   // Filter states
   const [selectedDriver, setSelectedDriver] = useState("");
@@ -153,13 +157,33 @@ export function TowTable() {
     setSelectedVehicle("");
   };
 
+  const handlePriceUpdate = (tow: any) => {
+    setSelectedTow(tow);
+    setPriceValue(tow.serviceFee || "");
+    setIsPriceUpdateOpen(true);
+  };
+
+  const handlePriceSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (selectedTow) {
+      await dispatch(updateTow({
+        id: selectedTow._id,
+        serviceFee: Number(priceValue)
+      }));
+      
+      setIsPriceUpdateOpen(false);
+      dispatch(getAllTows());
+    }
+  };
+
   const hasActiveFilters = searchTerm || selectedDriver || selectedCompany || selectedPlate || selectedVehicle;
 
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Çekici Kayıtları</h2>
-        <Button onClick={() => setIsCreateOpen(true)}>
+        <Button onClick={() => setIsCreateOpen(true)} id="newTowButton">
           <Plus className="mr-2 h-4 w-4" />
           Yeni Kayıt
         </Button>
@@ -359,6 +383,13 @@ export function TowTable() {
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handlePriceUpdate(tow)}
+                      >
+                        <DollarSign className="h-4 w-4" />
+                      </Button>
                       {/* Only superadmin can delete */}
                       {user?.role === 'superadmin' && (
                         <DeleteConfirmation
@@ -411,6 +442,40 @@ export function TowTable() {
           <div className="py-4 overflow-y-auto">
             {selectedTow && <TowDetail tow={selectedTow} />}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Price Update Dialog */}
+      <Dialog open={isPriceUpdateOpen} onOpenChange={setIsPriceUpdateOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Hizmet Bedeli Güncelle</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handlePriceSubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="serviceFee">Hizmet Bedeli (₺)</Label>
+              <Input
+                id="serviceFee"
+                type="number"
+                step="0.01"
+                min="0"
+                value={priceValue}
+                onChange={(e) => setPriceValue(e.target.value)}
+                placeholder="Hizmet bedeli girin"
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsPriceUpdateOpen(false)}
+              >
+                İptal
+              </Button>
+              <Button type="submit">Güncelle</Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

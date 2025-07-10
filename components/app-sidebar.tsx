@@ -63,7 +63,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
         {
           title: "Çekici Yönetimi",
-          url: "/",
+          url: "/cekici",
           icon: IconTruckDelivery,
           roles: ["user", "admin", "superadmin"], // All roles can access
         },

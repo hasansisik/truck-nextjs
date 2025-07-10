@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { TowTable } from "@/components/tow-table";
+import { useState, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { getAllTows } from "@/redux/actions/towActions";
 import { createVehicle } from "@/redux/actions/vehicleActions";
@@ -16,18 +15,21 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Truck, Users, Building } from "lucide-react";
+import { Truck, Users, Building, PlusCircle, Car, CalendarDays, BarChart3, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { safeLocalStorage } from "@/lib/utils";
 import axios from "axios";
 import { server } from "@/config";
 import { logout } from "@/redux/actions/userActions";
 import { useRouter } from "next/navigation";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { user } = useAppSelector((state) => state.user);
+  const { tows, loading: towsLoading } = useAppSelector((state) => state.tow);
 
   const [isVehicleOpen, setIsVehicleOpen] = useState(false);
   const [isCompanyOpen, setIsCompanyOpen] = useState(false);
@@ -160,6 +162,117 @@ export default function HomePage() {
     router.push('/users?addDriver=true');
   };
 
+  // Navigate to create new tow record
+  const handleAddTow = () => {
+    router.push('/cekici');
+    // Use setTimeout to ensure the DOM is ready
+    setTimeout(() => {
+      document.getElementById('newTowButton')?.click();
+    }, 100);
+  };
+
+  // Check if user is a driver
+  const isDriver = user?.role === 'driver';
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+
+  // Calculate today's date at midnight for filtering
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Dashboard statistics
+  const dashboardStats = useMemo(() => {
+    if (!tows) return { 
+      todayTows: 0, 
+      driverStats: [], 
+      totalDrivers: 0, 
+      vehicleStats: [],
+      totalVehicles: 0,
+      totalCompanies: 0
+    };
+
+    // Filter tows for today
+    const todayTows = tows.filter((tow: any) => {
+      const towDate = new Date(tow.towDate);
+      towDate.setHours(0, 0, 0, 0);
+      return towDate.getTime() === today.getTime();
+    });
+
+    // Get stats for current driver if user is a driver
+    let driverStats: any[] = [];
+    if (isDriver && user?.name) {
+      const driverTows = todayTows.filter((tow: any) => tow.driver === user.name);
+      
+      // Group by vehicle
+      const vehicleGroups: {[key: string]: number} = {};
+      driverTows.forEach((tow: any) => {
+        if (tow.towTruck) {
+          vehicleGroups[tow.towTruck] = (vehicleGroups[tow.towTruck] || 0) + 1;
+        }
+      });
+      
+      driverStats = Object.keys(vehicleGroups).map(vehicle => ({
+        vehicle,
+        count: vehicleGroups[vehicle]
+      }));
+    }
+
+    // Get stats for all drivers if user is admin/superadmin
+    let allDriverStats: any[] = [];
+    if (isAdmin) {
+      const driverGroups: {[key: string]: {[key: string]: number}} = {};
+      
+      todayTows.forEach((tow: any) => {
+        if (tow.driver && tow.towTruck) {
+          if (!driverGroups[tow.driver]) {
+            driverGroups[tow.driver] = {};
+          }
+          driverGroups[tow.driver][tow.towTruck] = (driverGroups[tow.driver][tow.towTruck] || 0) + 1;
+        }
+      });
+      
+      allDriverStats = Object.keys(driverGroups).map(driver => {
+        const vehicles = Object.keys(driverGroups[driver]).map(vehicle => ({
+          vehicle,
+          count: driverGroups[driver][vehicle]
+        }));
+        
+        return {
+          driver,
+          vehicles,
+          totalTows: vehicles.reduce((sum, v) => sum + v.count, 0)
+        };
+      });
+    }
+
+    // Get vehicle statistics
+    const vehicleGroups: {[key: string]: number} = {};
+    todayTows.forEach((tow: any) => {
+      if (tow.towTruck) {
+        vehicleGroups[tow.towTruck] = (vehicleGroups[tow.towTruck] || 0) + 1;
+      }
+    });
+    
+    const vehicleStats = Object.keys(vehicleGroups).map(vehicle => ({
+      vehicle,
+      count: vehicleGroups[vehicle]
+    }));
+
+    // Get unique counts
+    const uniqueDrivers = new Set(todayTows.map((tow: any) => tow.driver)).size;
+    const uniqueVehicles = new Set(todayTows.map((tow: any) => tow.towTruck)).size;
+    const uniqueCompanies = new Set(todayTows.map((tow: any) => tow.company)).size;
+
+    return {
+      todayTows: todayTows.length,
+      driverStats,
+      allDriverStats,
+      totalDrivers: uniqueDrivers,
+      vehicleStats,
+      totalVehicles: uniqueVehicles,
+      totalCompanies: uniqueCompanies
+    };
+  }, [tows, isDriver, isAdmin, user, today]);
+
   // Show loading or redirect based on auth check
   if (isAuthChecking) {
     return (
@@ -174,35 +287,54 @@ export default function HomePage() {
     return null;
   }
 
-  // Check if user is a driver
-  const isDriver = user?.role === 'driver';
-
   return (
     <div className="container mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Çekici Yönetimi</h1>
-        <p className="text-gray-500">
-          Araç çekme işlemlerinizi bu sayfadan yönetebilirsiniz.
-        </p>
-        {user?.role === 'driver' && (
-          <div className="mt-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm inline-block">
-            Şoför: Çekici işlemlerinizi görüntüleyebilirsiniz
+      {/* Welcome Section */}
+      <div className="mb-6 mt-2">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Hoşgeldin, {user?.name}</h1>
+            <p className="text-gray-500 mt-1">
+              Çekici yönetim sistemine hoş geldiniz. Bugünün özeti aşağıda.
+            </p>
+            
+            {/* User Role Badge */}
+            <div className="mt-3">
+              {user?.role === 'driver' && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">Şoför</Badge>
+              )}
+              {user?.role === 'admin' && (
+                <Badge variant="secondary" className="bg-green-100 text-green-800">Admin</Badge>
+              )}
+              {user?.role === 'superadmin' && (
+                <Badge variant="secondary" className="bg-purple-100 text-purple-800">Süper Admin</Badge>
+              )}
+            </div>
           </div>
-        )}
-        {user?.role === 'admin' && (
-          <div className="mt-2 px-3 py-1 bg-green-100 text-green-800 rounded-md text-sm inline-block">
-            Admin: Şirket içi tüm kayıtları görüntüleyebilirsiniz
-          </div>
-        )}
-        {user?.role === 'superadmin' && (
-          <div className="mt-2 px-3 py-1 bg-purple-100 text-purple-800 rounded-md text-sm inline-block">
-            Süper Admin: Tüm yetkilere sahipsiniz
-          </div>
-        )}
-        
-        {/* Only show quick add buttons if user is not a driver */}
-        {!isDriver && (
-          <div className="flex flex-wrap gap-3 mt-4">
+          
+          {!isDriver && (
+            <div className="mt-4 md:mt-0">
+              <Button 
+                onClick={handleAddTow} 
+                className="bg-primary hover:bg-primary/90"
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Yeni Çekme Kaydı
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Quick Action Buttons - Moved to top */}
+      {!isDriver && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4 flex items-center">
+            <PlusCircle className="mr-2 h-5 w-5 text-primary" />
+            Hızlı İşlemler
+          </h2>
+          
+          <div className="flex flex-wrap gap-3">
             <Button 
               variant="outline" 
               size="sm"
@@ -233,10 +365,179 @@ export default function HomePage() {
               <span>Firma Ekle</span>
             </Button>
           </div>
-        )}
+        </div>
+      )}
+      
+      {/* Dashboard Stats */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4 flex items-center">
+          <BarChart3 className="mr-2 h-5 w-5 text-primary" />
+          Bugünün İstatistikleri
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Today's Tows */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-medium">Bugünkü Çekimler</CardTitle>
+              <CardDescription>Tüm şoförler</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{dashboardStats.todayTows}</div>
+              <p className="text-xs text-muted-foreground mt-1">Araç çekildi</p>
+            </CardContent>
+          </Card>
+          
+          {/* Active Drivers */}
+          {isAdmin && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">Aktif Şoförler</CardTitle>
+                <CardDescription>Bugün çekim yapan</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{dashboardStats.totalDrivers}</div>
+                <p className="text-xs text-muted-foreground mt-1">Şoför görevde</p>
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Vehicles Used */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-medium">Kullanılan Araçlar</CardTitle>
+              <CardDescription>Bugün kullanılan</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{dashboardStats.totalVehicles}</div>
+              <p className="text-xs text-muted-foreground mt-1">Araç kullanımda</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
       
-      <TowTable />
+      {/* Driver Statistics (for drivers) */}
+      {isDriver && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4 flex items-center">
+            <TrendingUp className="mr-2 h-5 w-5 text-primary" />
+            Bugünkü Performansınız
+          </h2>
+          
+          {dashboardStats.driverStats.length > 0 ? (
+            <div className="space-y-4">
+              {dashboardStats.driverStats.map((stat, index) => (
+                <Card key={index} className="border-l-4 border-l-primary">
+                  <CardContent className="p-6">
+                    <div className="flex items-center">
+                      <Car className="h-8 w-8 text-primary mr-4" />
+                      <div>
+                        <h3 className="text-xl font-semibold">{stat.vehicle} ile {stat.count} adet araç çektiniz</h3>
+                        <p className="text-muted-foreground text-sm mt-1">Bugün, {today.toLocaleDateString('tr-TR')}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              
+              {/* Total tows */}
+              <Card className="bg-primary/5 border-l-4 border-l-primary">
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <CalendarDays className="h-8 w-8 text-primary mr-4" />
+                    <div>
+                      <h3 className="text-xl font-semibold">
+                        Bugün toplam {dashboardStats.driverStats.reduce((sum, stat) => sum + stat.count, 0)} adet araç çektiniz
+                      </h3>
+                      <p className="text-muted-foreground text-sm mt-1">Tebrikler! Performansınız kaydedildi.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center py-8">
+                  <CalendarDays className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold">Bugün henüz araç çekmediniz</h3>
+                  <p className="text-muted-foreground mt-2">Çekme işlemi yaptığınızda burada görünecektir.</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+      
+      {/* Admin/SuperAdmin Driver Statistics */}
+      {isAdmin && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4 flex items-center">
+            <Users className="mr-2 h-5 w-5 text-primary" />
+            Çekici İşlemleri
+          </h2>
+          
+          {dashboardStats.allDriverStats && dashboardStats.allDriverStats.length > 0 ? (
+            <>
+              {/* Total company performance */}
+              <Card className="mb-6 bg-primary/5 border-l-4 border-l-primary">
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <Building className="h-8 w-8 text-primary mr-4" />
+                    <div>
+                      <h3 className="text-xl font-semibold">
+                        Bugün firma toplam {dashboardStats.todayTows} adet araç çekti
+                      </h3>
+                      <p className="text-muted-foreground text-sm mt-1">
+                        {dashboardStats.totalDrivers} şoför, {dashboardStats.totalVehicles} araç kullanıldı
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <div className="space-y-4">
+                {dashboardStats.allDriverStats.map((driver, index) => (
+                  <Card key={index} className="border-l-4 border-l-blue-500">
+                    <CardContent className="p-6">
+                      <div className="flex items-start">
+                        <Users className="h-8 w-8 text-blue-500 mr-4 mt-1" />
+                        <div className="w-full">
+                          <h3 className="text-xl font-semibold mb-2">{driver.driver}</h3>
+                          
+                          <div className="space-y-3 mt-4">
+                            {driver.vehicles.map((v: any, i: number) => (
+                              <div key={i} className="flex items-center">
+                                <Car className="h-5 w-5 text-muted-foreground mr-3" />
+                                <span className="text-lg">{v.vehicle} ile {v.count} adet araç çekti</span>
+                              </div>
+                            ))}
+                            
+                            <div className="flex items-center pt-2 mt-2 border-t">
+                              <CalendarDays className="h-5 w-5 text-primary mr-3" />
+                              <span className="text-lg font-medium">Toplam {driver.totalTows} adet araç çekti</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </>
+          ) : (
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold">Bugün henüz araç çekimi yapılmadı</h3>
+                  <p className="text-muted-foreground mt-2">Şoförler çekme işlemi yaptığında burada görünecektir.</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
       
       {/* Quick Add Vehicle Dialog */}
       <Dialog open={isVehicleOpen} onOpenChange={setIsVehicleOpen}>
