@@ -6,6 +6,7 @@ import {
   getMyProfile,
   editProfile,
   getAllUsers,
+  getAllDrivers,
   editUser,
   deleteUser,
   registerUser,
@@ -23,6 +24,7 @@ interface userState {
   isAuthenticated: boolean;
   message?: string;
   users: any[];
+  drivers: any[];
   success?: boolean;
   verificationSuccess?: boolean;
   forgotPasswordSuccess?: boolean;
@@ -37,6 +39,7 @@ const initialState: userState = {
   error: null,
   isAuthenticated: false,
   users: [],
+  drivers: [],
   success: false,
   verificationSuccess: false,
   forgotPasswordSuccess: false,
@@ -278,6 +281,21 @@ export const userReducer = createReducer(initialState, (builder) => {
       state.loading = false;
       state.error = action.payload as string;
       state.success = false;
+    })
+    
+    // Get All Drivers
+    .addCase(getAllDrivers.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    .addCase(getAllDrivers.fulfilled, (state, action) => {
+      state.loading = false;
+      state.drivers = action.payload;
+      state.error = null;
+    })
+    .addCase(getAllDrivers.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
     });
 });
 

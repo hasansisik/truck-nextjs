@@ -16,7 +16,7 @@ import {
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Check, ShieldAlert } from "lucide-react";
+import { Plus, Edit, Trash2, Check, ShieldAlert, Car } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { 
@@ -32,10 +32,13 @@ import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { register, getAllUsers, editUser, deleteUser, clearError } from "@/redux/actions/userActions";
 import DeleteConfirmation from "@/components/delete-confirmation";
 import { DialogClose } from "@radix-ui/react-dialog";
+import { toast } from "sonner";
+import { useSearchParams } from 'next/navigation';
 
 export default function UsersPage() {
   const dispatch = useAppDispatch();
   const { loading, error, success, users } = useAppSelector((state) => state.user);
+  const searchParams = useSearchParams();
   
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -44,16 +47,22 @@ export default function UsersPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    username: "",
     password: "",
-    role: "user",
+    role: "driver",
+    license: "",
+    experience: 0,
   });
 
   const [editFormData, setEditFormData] = useState({
     name: "",
     email: "",
+    username: "",
     password: "",
     role: "",
-    status: "active"
+    status: "active",
+    license: "",
+    experience: 0
   });
 
   // Fetch users on component mount
@@ -67,8 +76,11 @@ export default function UsersPage() {
       setFormData({
         name: "",
         email: "",
+        username: "",
         password: "",
-        role: "user",
+        role: "driver",
+        license: "",
+        experience: 0,
       });
       dispatch(clearError());
     }
@@ -80,9 +92,12 @@ export default function UsersPage() {
       setEditFormData({
         name: "",
         email: "",
+        username: "",
         password: "",
         role: "",
-        status: "active"
+        status: "active",
+        license: "",
+        experience: 0
       });
       dispatch(clearError());
     }
@@ -94,9 +109,12 @@ export default function UsersPage() {
       setEditFormData({
         name: selectedUser.name || "",
         email: selectedUser.email || "",
+        username: selectedUser.username || "",
         password: "",
         role: selectedUser.role || "",
-        status: selectedUser.status || "active"
+        status: selectedUser.status || "active",
+        license: selectedUser.driverInfo?.license || "",
+        experience: selectedUser.driverInfo?.experience || 0
       });
     }
   }, [selectedUser]);
@@ -109,6 +127,28 @@ export default function UsersPage() {
       if (isEditOpen) setIsEditOpen(false);
     }
   }, [success, dispatch, isAddOpen, isEditOpen]);
+
+  // Handle query parameters for adding or editing drivers
+  useEffect(() => {
+    const addDriver = searchParams.get('addDriver');
+    const editDriver = searchParams.get('editDriver');
+    
+    if (addDriver === 'true') {
+      setFormData({
+        ...formData,
+        role: 'driver'
+      });
+      setIsAddOpen(true);
+    }
+    
+    if (editDriver) {
+      const driver = users.find(user => user._id === editDriver);
+      if (driver) {
+        setSelectedUser(driver);
+        setIsEditOpen(true);
+      }
+    }
+  }, [searchParams, users]);
 
   const handleEdit = (user: any) => {
     setSelectedUser(user);
@@ -137,25 +177,52 @@ export default function UsersPage() {
   
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that at least email or username is provided
+    if (!formData.email && !formData.username) {
+      toast.error("E-posta veya kullanıcı adı gereklidir.");
+      return;
+    }
+    
+    const driverInfo = formData.role === 'driver' ? {
+      license: formData.license,
+      experience: formData.experience
+    } : undefined;
+    
     dispatch(register({
       name: formData.name,
       email: formData.email,
+      username: formData.username,
       password: formData.password,
       role: formData.role,
+      ...(driverInfo && { license: driverInfo.license, experience: driverInfo.experience })
     }));
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser) return;
+    
+    // Validate that at least email or username is provided
+    if (!editFormData.email && !editFormData.username) {
+      toast.error("E-posta veya kullanıcı adı gereklidir.");
+      return;
+    }
 
     const userData: any = {
       userId: selectedUser._id,
       name: editFormData.name,
       email: editFormData.email,
+      username: editFormData.username,
       role: editFormData.role,
       status: editFormData.status
     };
+    
+    // Add driver info if role is driver
+    if (editFormData.role === 'driver') {
+      userData.license = editFormData.license;
+      userData.experience = parseInt(editFormData.experience.toString());
+    }
 
     // Only include password if it's provided
     if (editFormData.password) {
@@ -171,8 +238,8 @@ export default function UsersPage() {
         return <Badge variant="destructive">Süper Admin</Badge>;
       case "admin":
         return <Badge variant="default">Admin</Badge>;
-      case "user":
-        return <Badge variant="secondary">Kullanıcı</Badge>;
+      case "driver":
+        return <Badge variant="secondary" className="bg-green-100 text-green-800">Şoför</Badge>;
       default:
         return <Badge variant="outline">{role}</Badge>;
     }
@@ -198,6 +265,7 @@ export default function UsersPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Kullanıcı</TableHead>
+              <TableHead>Kullanıcı Adı</TableHead>
               <TableHead>E-posta</TableHead>
               <TableHead>Rol</TableHead>
               <TableHead>Durum</TableHead>
@@ -207,7 +275,7 @@ export default function UsersPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-10">
+                <TableCell colSpan={6} className="text-center py-10">
                   Yükleniyor...
                 </TableCell>
               </TableRow>
@@ -217,7 +285,6 @@ export default function UsersPage() {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9">
-                        <AvatarImage src={user.avatar} alt={user.name} />
                         <AvatarFallback>
                           {user.name
                             .split(" ")
@@ -233,9 +300,15 @@ export default function UsersPage() {
                             <ShieldAlert className="h-3 w-3 mr-1" /> Süper Yönetici
                           </div>
                         )}
+                        {user.role === "driver" && (
+                          <div className="text-xs flex items-center text-green-600">
+                            <Car className="h-3 w-3 mr-1" /> Şoför
+                          </div>
+                        )}
                       </div>
                     </div>
                   </TableCell>
+                  <TableCell>{user.username || "-"}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{getRoleBadge(user.role)}</TableCell>
                   <TableCell>
@@ -243,6 +316,11 @@ export default function UsersPage() {
                       <div className="flex items-center">
                         <div className="h-2.5 w-2.5 rounded-full bg-green-500 mr-2"></div>
                         <span>Aktif</span>
+                      </div>
+                    ) : user.status === "onleave" ? (
+                      <div className="flex items-center">
+                        <div className="h-2.5 w-2.5 rounded-full bg-yellow-500 mr-2"></div>
+                        <span>İzinli</span>
                       </div>
                     ) : (
                       <div className="flex items-center">
@@ -276,7 +354,7 @@ export default function UsersPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-10">
+                <TableCell colSpan={6} className="text-center py-10">
                   Henüz kullanıcı bulunmuyor.
                 </TableCell>
               </TableRow>
@@ -308,6 +386,16 @@ export default function UsersPage() {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="username">Kullanıcı Adı</Label>
+              <Input
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+              />
+              <p className="text-xs text-gray-500">E-posta veya kullanıcı adından en az biri gereklidir.</p>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="email">E-posta</Label>
               <Input
                 id="email"
@@ -315,7 +403,6 @@ export default function UsersPage() {
                 type="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                required
               />
             </div>
             <div className="space-y-2">
@@ -329,6 +416,7 @@ export default function UsersPage() {
                 required
               />
             </div>
+            
             <div className="space-y-2">
               <Label htmlFor="role">Rol</Label>
               <Select value={formData.role} onValueChange={(value) => setFormData({...formData, role: value})}>
@@ -336,11 +424,40 @@ export default function UsersPage() {
                   <SelectValue placeholder="Rol seçin" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user">Kullanıcı</SelectItem>
+                  <SelectItem value="driver">Şoför</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="superadmin">Süper Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            
+            {formData.role === 'driver' && (
+              <div className="space-y-4 border-l-2 border-gray-200 pl-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="license">Ehliyet Numarası</Label>
+                  <Input
+                    id="license"
+                    name="license"
+                    value={formData.license}
+                    onChange={handleInputChange}
+                    required={formData.role === 'driver'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="experience">Deneyim (Yıl)</Label>
+                  <Input
+                    id="experience"
+                    name="experience"
+                    type="number"
+                    min="0"
+                    value={formData.experience}
+                    onChange={handleInputChange}
+                    required={formData.role === 'driver'}
+                  />
+                </div>
+              </div>
+            )}
+            
             <div className="pt-4 flex justify-end space-x-2">
               <DialogClose asChild>
                 <Button type="button" variant="outline">
@@ -378,6 +495,16 @@ export default function UsersPage() {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="edit-username">Kullanıcı Adı</Label>
+              <Input
+                id="edit-username"
+                name="username"
+                value={editFormData.username}
+                onChange={handleEditInputChange}
+              />
+              <p className="text-xs text-gray-500">E-posta veya kullanıcı adından en az biri gereklidir.</p>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="edit-email">E-posta</Label>
               <Input
                 id="edit-email"
@@ -385,7 +512,6 @@ export default function UsersPage() {
                 type="email"
                 value={editFormData.email}
                 onChange={handleEditInputChange}
-                required
               />
             </div>
             <div className="space-y-2">
@@ -398,6 +524,7 @@ export default function UsersPage() {
                 onChange={handleEditInputChange}
               />
             </div>
+            
             <div className="space-y-2">
               <Label htmlFor="edit-role">Rol</Label>
               <Select value={editFormData.role} onValueChange={(value) => setEditFormData({...editFormData, role: value})}>
@@ -405,11 +532,40 @@ export default function UsersPage() {
                   <SelectValue placeholder="Rol seçin" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user">Kullanıcı</SelectItem>
+                  <SelectItem value="driver">Şoför</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="superadmin">Süper Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            
+            {editFormData.role === 'driver' && (
+              <div className="space-y-4 border-l-2 border-gray-200 pl-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-license">Ehliyet Numarası</Label>
+                  <Input
+                    id="edit-license"
+                    name="license"
+                    value={editFormData.license}
+                    onChange={handleEditInputChange}
+                    required={editFormData.role === 'driver'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-experience">Deneyim (Yıl)</Label>
+                  <Input
+                    id="edit-experience"
+                    name="experience"
+                    type="number"
+                    min="0"
+                    value={editFormData.experience}
+                    onChange={handleEditInputChange}
+                    required={editFormData.role === 'driver'}
+                  />
+                </div>
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="edit-status">Durum</Label>
               <Select value={editFormData.status} onValueChange={(value) => setEditFormData({...editFormData, status: value})}>
@@ -419,6 +575,7 @@ export default function UsersPage() {
                 <SelectContent>
                   <SelectItem value="active">Aktif</SelectItem>
                   <SelectItem value="inactive">Pasif</SelectItem>
+                  <SelectItem value="onleave">İzinli</SelectItem>
                 </SelectContent>
               </Select>
             </div>

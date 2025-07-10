@@ -62,10 +62,15 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
   const { vehicles } = useAppSelector((state) => state.vehicle);
   const { drivers } = useAppSelector((state) => state.driver);
   const { companies } = useAppSelector((state) => state.company);
+  const { user } = useAppSelector((state) => state.user);
   
   const [images, setImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [formInitialized, setFormInitialized] = useState(false);
+
+  // Check if current user is a driver
+  const isCurrentUserDriver = user?.role === 'driver';
 
   // Fetch data if needed
   useEffect(() => {
@@ -80,6 +85,7 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
     }
   }, [dispatch, vehicles, drivers, companies]);
 
+  // Initialize form with default values
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -94,23 +100,43 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
     },
   });
 
+  // Set form values once when component mounts or when tow/user changes
   useEffect(() => {
+    if (formInitialized) {
+      return; // Only run this once
+    }
+    
+    let defaultValues = {
+      towTruck: "",
+      driver: isCurrentUserDriver && user?.name ? user.name : "",
+      licensePlate: "",
+      towDate: new Date(),
+      distance: 0,
+      company: "",
+      serviceFee: 0,
+      images: [],
+    };
+    
+    // For editing existing tow
     if (tow) {
-      // Reset form with proper values
-      form.reset({
+      defaultValues = {
         towTruck: tow.towTruck || "",
-        driver: tow.driver || "",
+        driver: tow.driver || (isCurrentUserDriver && user?.name ? user.name : ""),
         licensePlate: tow.licensePlate || "",
         towDate: tow.towDate ? new Date(tow.towDate) : new Date(),
         distance: tow.distance || 0,
         company: tow.company || "",
         serviceFee: tow.serviceFee || 0,
         images: tow.images || [],
-      });
+      };
       
       setImages(tow.images || []);
     }
-  }, [tow, form]);
+    
+    // Reset form with all values at once
+    form.reset(defaultValues);
+    setFormInitialized(true);
+  }, [tow, user, isCurrentUserDriver, formInitialized, form]);
 
   useEffect(() => {
     if (success && isSubmitting) {
@@ -129,8 +155,6 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
     try {
       setIsSubmitting(true);
       setImageError(null);
-      
-      // Fotoğraf artık zorunlu değil
       
       if (tow) {
         await dispatch(updateTow({
@@ -179,7 +203,6 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
                   disabled={loading || isSubmitting} 
                   onValueChange={field.onChange} 
                   value={field.value}
-                  key={`towTruck-${field.value}`}
                 >
                   <FormControl>
                     <SelectTrigger className="w-full h-10">
@@ -209,10 +232,9 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
               <FormItem>
                 <FormLabel className="text-sm font-medium">Şoför</FormLabel>
                 <Select 
-                  disabled={loading || isSubmitting} 
+                  disabled={loading || isSubmitting || isCurrentUserDriver} 
                   onValueChange={field.onChange} 
                   value={field.value}
-                  key={`driver-${field.value}`}
                 >
                   <FormControl>
                     <SelectTrigger className="w-full h-10">
@@ -352,7 +374,6 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
                 disabled={loading || isSubmitting} 
                 onValueChange={field.onChange} 
                 value={field.value}
-                key={`company-${field.value}`}
               >
                 <FormControl>
                   <SelectTrigger className="w-full h-10">

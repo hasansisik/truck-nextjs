@@ -1,21 +1,30 @@
 import { createReducer } from "@reduxjs/toolkit";
 import {
-  getAllDrivers,
   getDriver,
   createDriver,
   updateDriver,
   deleteDriver,
   clearDriverError
 } from "../actions/driverActions";
+import { getAllDrivers } from "../actions/userActions";
+
+export interface DriverInfo {
+  license: string;
+  experience: number;
+  isDriver: boolean;
+}
 
 export interface Driver {
   _id: string;
   name: string;
-  phone: string;
-  license: string;
-  experience: number;
-  avatar?: string;
-  status?: string;
+  username?: string;
+  email?: string;
+  role: string;
+  status: string;
+  profile?: {
+    phoneNumber?: string;
+  };
+  driverInfo?: DriverInfo;
 }
 
 interface DriverState {

@@ -3,6 +3,10 @@ import { createAsyncThunk, createAction } from "@reduxjs/toolkit";
 import { server } from "@/config";
 import { safeLocalStorage, handleApiError, showSuccess, showPermissionDenied } from "@/lib/utils";
 import { Driver } from "../reducers/driverReducer";
+import { getAllDrivers as getUserDrivers } from "./userActions";
+
+// Re-export getAllDrivers from userActions
+export const getAllDrivers = getUserDrivers;
 
 // Clear error action
 export const clearDriverError = createAction('driver/clearError');
@@ -19,25 +23,6 @@ export interface DriverPayload {
 export interface UpdateDriverPayload extends Partial<DriverPayload> {
   id: string;
 }
-
-// Get all drivers
-export const getAllDrivers = createAsyncThunk(
-  "driver/getAllDrivers",
-  async (_, thunkAPI) => {
-    try {
-      const token = safeLocalStorage.getItem("accessToken");
-      const { data } = await axios.get(`${server}/drivers`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      return data.drivers;
-    } catch (error: any) {
-      const message = handleApiError(error, 'Şoförler alınamadı', false);
-      return thunkAPI.rejectWithValue(message);
-    }
-  }
-);
 
 // Get a single driver
 export const getDriver = createAsyncThunk(

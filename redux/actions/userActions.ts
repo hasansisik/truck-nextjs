@@ -7,17 +7,20 @@ import { safeLocalStorage, handleApiError, showSuccess, showPermissionDenied } f
 export const clearError = createAction('user/clearError');
 
 export interface LoginPayload {
-  email: string;
+  emailOrUsername: string;
   password: string;
 }
 
 export interface RegisterPayload {
   name: string;
-  email: string;
+  email?: string;
+  username?: string;
   password: string;
-  picture?: string;
   role?: string;
   companyId?: string;
+  isDriver?: boolean;
+  license?: string;
+  experience?: number;
 }
 
 export interface RegisterUserPayload {
@@ -29,7 +32,6 @@ export interface RegisterUserPayload {
 export interface EditProfilePayload {
   name?: string;
   email?: string;
-  picture?: string;
   companyId?: string;
   currentPassword?: string;
   newPassword?: string;
@@ -39,11 +41,14 @@ export interface EditUserPayload {
   userId: string;
   name?: string;
   email?: string;
+  username?: string;
   password?: string;
   role?: string;
   status?: string;
-  picture?: string;
   companyId?: string;
+  isDriver?: boolean;
+  license?: string;
+  experience?: number;
 }
 
 export interface ForgotPasswordPayload {
@@ -346,6 +351,24 @@ export const deleteUser = createAsyncThunk(
         handleApiError(error, 'Kullanıcı silinemedi');
       }
       return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Kullanıcı silinemedi');
+    }
+  }
+);
+
+export const getAllDrivers = createAsyncThunk(
+  "user/getAllDrivers",
+  async (_, thunkAPI) => {
+    try {
+      const token = safeLocalStorage.getItem("accessToken");
+      const { data } = await axios.get(`${server}/auth/drivers`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return data.drivers;
+    } catch (error: any) {
+      handleApiError(error, 'Şoförler alınamadı');
+      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Şoförler alınamadı');
     }
   }
 );

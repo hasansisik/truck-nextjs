@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { TowTable } from "@/components/tow-table";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { getAllTows } from "@/redux/actions/towActions";
 import { createVehicle } from "@/redux/actions/vehicleActions";
-import { createDriver } from "@/redux/actions/driverActions";
 import { createCompany } from "@/redux/actions/companyActions";
 import { Button } from "@/components/ui/button";
 import { 
@@ -23,13 +22,14 @@ import { safeLocalStorage } from "@/lib/utils";
 import axios from "axios";
 import { server } from "@/config";
 import { logout } from "@/redux/actions/userActions";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const { user } = useAppSelector((state) => state.user);
 
   const [isVehicleOpen, setIsVehicleOpen] = useState(false);
-  const [isDriverOpen, setIsDriverOpen] = useState(false);
   const [isCompanyOpen, setIsCompanyOpen] = useState(false);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [isTokenValid, setIsTokenValid] = useState(false);
@@ -43,14 +43,6 @@ export default function HomePage() {
     status: "active",
   });
   
-  const [driverForm, setDriverForm] = useState({
-    name: "",
-    phone: "",
-    license: "",
-    experience: "",
-    status: "active",
-  });
-  
   const [companyForm, setCompanyForm] = useState({
     name: "",
     address: "",
@@ -61,7 +53,6 @@ export default function HomePage() {
 
   // Redux states
   const { vehicles, loading: vehicleLoading, error: vehicleError } = useAppSelector(state => state.vehicle || {});
-  const { drivers, loading: driverLoading, error: driverError } = useAppSelector(state => state.driver || {});
   const { companies, loading: companyLoading, error: companyError } = useAppSelector(state => state.company || {});
 
   useEffect(() => {
@@ -113,11 +104,6 @@ export default function HomePage() {
     setVehicleForm({ ...vehicleForm, [name]: value });
   };
   
-  const handleDriverInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setDriverForm({ ...driverForm, [name]: value });
-  };
-  
   const handleCompanyInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setCompanyForm({ ...companyForm, [name]: value });
@@ -132,17 +118,6 @@ export default function HomePage() {
       status: "active",
     });
     setIsVehicleOpen(false);
-  };
-  
-  const resetDriverForm = () => {
-    setDriverForm({
-      name: "",
-      phone: "",
-      license: "",
-      experience: "",
-      status: "active",
-    });
-    setIsDriverOpen(false);
   };
   
   const resetCompanyForm = () => {
@@ -170,19 +145,6 @@ export default function HomePage() {
     });
   };
 
-  const handleDriverSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    dispatch(createDriver({
-      ...driverForm,
-      experience: parseInt(driverForm.experience) || 0,
-    })).then(() => {
-      setIsDriverOpen(false);
-      resetDriverForm();
-      dispatch(getAllTows());
-    });
-  };
-
   const handleCompanySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -191,6 +153,11 @@ export default function HomePage() {
       resetCompanyForm();
       dispatch(getAllTows());
     });
+  };
+
+  // Navigate to users page with driver role pre-selected
+  const handleAddDriver = () => {
+    router.push('/users?addDriver=true');
   };
 
   // Show loading or redirect based on auth check
@@ -207,6 +174,9 @@ export default function HomePage() {
     return null;
   }
 
+  // Check if user is a driver
+  const isDriver = user?.role === 'driver';
+
   return (
     <div className="container mx-auto">
       <div className="mb-6">
@@ -214,9 +184,9 @@ export default function HomePage() {
         <p className="text-gray-500">
           Araç çekme işlemlerinizi bu sayfadan yönetebilirsiniz.
         </p>
-        {user?.role === 'user' && (
+        {user?.role === 'driver' && (
           <div className="mt-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm inline-block">
-            Kullanıcı: Sadece kendi kayıtlarınızı görüntüleyebilirsiniz
+            Şoför: Çekici işlemlerinizi görüntüleyebilirsiniz
           </div>
         )}
         {user?.role === 'admin' && (
@@ -230,37 +200,40 @@ export default function HomePage() {
           </div>
         )}
         
-        <div className="flex flex-wrap gap-3 mt-4">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="flex items-center gap-2"
-            onClick={() => setIsVehicleOpen(true)}
-          >
-            <Truck className="h-4 w-4" />
-            <span>Araç Ekle</span>
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="flex items-center gap-2"
-            onClick={() => setIsDriverOpen(true)}
-          >
-            <Users className="h-4 w-4" />
-            <span>Şoför Ekle</span>
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="flex items-center gap-2"
-            onClick={() => setIsCompanyOpen(true)}
-          >
-            <Building className="h-4 w-4" />
-            <span>Firma Ekle</span>
-          </Button>
-        </div>
+        {/* Only show quick add buttons if user is not a driver */}
+        {!isDriver && (
+          <div className="flex flex-wrap gap-3 mt-4">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-2"
+              onClick={() => setIsVehicleOpen(true)}
+            >
+              <Truck className="h-4 w-4" />
+              <span>Araç Ekle</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-2"
+              onClick={handleAddDriver}
+            >
+              <Users className="h-4 w-4" />
+              <span>Şoför Ekle</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-2"
+              onClick={() => setIsCompanyOpen(true)}
+            >
+              <Building className="h-4 w-4" />
+              <span>Firma Ekle</span>
+            </Button>
+          </div>
+        )}
       </div>
       
       <TowTable />
@@ -314,65 +287,6 @@ export default function HomePage() {
                 value={vehicleForm.licensePlate}
                 onChange={handleVehicleInputChange}
                 placeholder="Plaka numarasını girin"
-                required
-              />
-            </div>
-            <DialogFooter>
-              <Button type="submit" className="w-full">Kaydet</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Quick Add Driver Dialog */}
-      <Dialog open={isDriverOpen} onOpenChange={setIsDriverOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Yeni Şoför Ekle</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleDriverSubmit} className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="driverName">Şoför Adı</Label>
-              <Input
-                id="driverName"
-                name="name"
-                value={driverForm.name}
-                onChange={handleDriverInputChange}
-                placeholder="Şoför adını girin"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefon</Label>
-              <Input
-                id="phone"
-                name="phone"
-                value={driverForm.phone}
-                onChange={handleDriverInputChange}
-                placeholder="Telefon numarasını girin"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="license">Ehliyet</Label>
-              <Input
-                id="license"
-                name="license"
-                value={driverForm.license}
-                onChange={handleDriverInputChange}
-                placeholder="Ehliyet bilgisini girin"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="experience">Tecrübe (Yıl)</Label>
-              <Input
-                id="experience"
-                name="experience"
-                type="number"
-                value={driverForm.experience}
-                onChange={handleDriverInputChange}
-                placeholder="Tecrübe yılını girin"
                 required
               />
             </div>

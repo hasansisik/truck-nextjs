@@ -41,50 +41,63 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     avatar: user?.picture || "/avatars/admin.jpg",
   };
   
-  const allNavItems = [
-    {
-      title: "Raporlar",
-      url: "/raporlar",
-      icon: IconReport,
-      roles: ["admin", "superadmin"], // Only admin and superadmin can see reports
-    },
-    {
-      title: "Çekici Yönetimi",
-      url: "/",
-      icon: IconTruckDelivery,
-      roles: ["user", "admin", "superadmin"], // All roles can access
-    },
-    {
-      title: "Masraf Yönetimi",
-      url: "/masraflar",
-      icon: IconReceipt,
-      roles: ["admin", "superadmin"], // Only admin and superadmin can manage expenses
-    },
-    {
-      title: "Araç Yönetimi",
-      url: "/vehicles",
-      icon: IconTruck,
-      roles: ["user", "admin", "superadmin"], // All roles can access
-    },
-    {
-      title: "Şoför Yönetimi",
-      url: "/drivers",
-      icon: IconUsers,
-      roles: ["user", "admin", "superadmin"], // All roles can access
-    },
-    {
-      title: "Firma Yönetimi",
-      url: "/companies",
-      icon: IconBuilding,
-      roles: ["user", "admin", "superadmin"], // All roles can access
-    },
-    {
-      title: "Kullanıcılar",
-      url: "/users",
-      icon: IconUserPlus,
-      roles: ["admin", "superadmin"], // Only admin and superadmin can manage users
-    },
-  ];
+  // Check if user is a driver
+  const isDriver = user?.role === "driver";
+  
+  // If user is a driver, only show the Çekici Yönetimi page
+  const allNavItems = isDriver 
+    ? [
+        {
+          title: "Çekici Yönetimi",
+          url: "/",
+          icon: IconTruckDelivery,
+          roles: ["driver"],
+        }
+      ]
+    : [
+        {
+          title: "Raporlar",
+          url: "/raporlar",
+          icon: IconReport,
+          roles: ["admin", "superadmin"], // Only admin and superadmin can see reports
+        },
+        {
+          title: "Çekici Yönetimi",
+          url: "/",
+          icon: IconTruckDelivery,
+          roles: ["user", "admin", "superadmin"], // All roles can access
+        },
+        {
+          title: "Masraf Yönetimi",
+          url: "/masraflar",
+          icon: IconReceipt,
+          roles: ["admin", "superadmin"], // Only admin and superadmin can manage expenses
+        },
+        {
+          title: "Araç Yönetimi",
+          url: "/vehicles",
+          icon: IconTruck,
+          roles: ["user", "admin", "superadmin"], // All roles can access
+        },
+        {
+          title: "Şoför Yönetimi",
+          url: "/drivers",
+          icon: IconUsers,
+          roles: ["user", "admin", "superadmin"], // All roles can access
+        },
+        {
+          title: "Firma Yönetimi",
+          url: "/companies",
+          icon: IconBuilding,
+          roles: ["user", "admin", "superadmin"], // All roles can access
+        },
+        {
+          title: "Kullanıcılar",
+          url: "/users",
+          icon: IconUserPlus,
+          roles: ["admin", "superadmin"], // Only admin and superadmin can manage users
+        },
+      ];
 
   // Filter navigation items based on user role
   const navItems = allNavItems.filter(item => 
