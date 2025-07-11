@@ -36,7 +36,11 @@ import DeleteConfirmation from "./delete-confirmation";
 import { formatDateTimeTR, formatDateTR } from "@/lib/utils";
 import { Label } from "./ui/label";
 
-export function TowTable() {
+interface TowTableProps {
+  filteredTows?: any[];
+}
+
+export function TowTable({ filteredTows: propFilteredTows }: TowTableProps = {}) {
   const dispatch = useAppDispatch();
   const { tows, loading } = useAppSelector((state) => state.tow);
   const { user } = useAppSelector((state) => state.user);
@@ -73,9 +77,11 @@ export function TowTable() {
 
   // Filtered tows list
   const filteredTows = useMemo(() => {
-    if (!tows) return [];
+    // If propFilteredTows is provided, use it as the base instead of all tows
+    const baseTows = propFilteredTows || tows;
+    if (!baseTows) return [];
 
-    let filtered = [...tows];
+    let filtered = [...baseTows];
 
     // Apply search filter
     if (searchTerm.trim()) {
@@ -114,7 +120,7 @@ export function TowTable() {
     }
 
     return filtered;
-  }, [tows, searchTerm, selectedDriver, selectedCompany, selectedPlate, selectedVehicle]);
+  }, [tows, propFilteredTows, searchTerm, selectedDriver, selectedCompany, selectedPlate, selectedVehicle]);
 
   const handleEdit = (tow: any) => {
     setSelectedTow(tow);

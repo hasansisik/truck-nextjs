@@ -68,6 +68,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           roles: ["user", "admin", "superadmin"], // All roles can access
         },
         {
+          title: "Teklif Bekleyen Çekimler",
+          url: "/teklif-cekici",
+          icon: IconReceipt,
+          roles: ["admin", "superadmin"], // Only admin and superadmin can see pending quotes
+        },
+        {
           title: "Masraf Yönetimi",
           url: "/masraflar",
           icon: IconReceipt,
