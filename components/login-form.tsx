@@ -81,7 +81,8 @@ export function LoginForm({
                   </div>
                   <Input 
                     id="password" 
-                    type="password" 
+                    type="password"
+                    placeholder="********"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
