@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Table, 
@@ -35,10 +35,51 @@ import { DialogClose } from "@radix-ui/react-dialog";
 import { toast } from "sonner";
 import { useSearchParams } from 'next/navigation';
 
-export default function UsersPage() {
+// Component that handles search params with Suspense
+function SearchParamsHandler({ 
+  users, 
+  setFormData, 
+  formData, 
+  setIsAddOpen, 
+  setSelectedUser, 
+  setIsEditOpen 
+}: {
+  users: any[];
+  setFormData: (data: any) => void;
+  formData: any;
+  setIsAddOpen: (open: boolean) => void;
+  setSelectedUser: (user: any) => void;
+  setIsEditOpen: (open: boolean) => void;
+}) {
+  const searchParams = useSearchParams();
+  
+  useEffect(() => {
+    const addDriver = searchParams.get('addDriver');
+    const editDriver = searchParams.get('editDriver');
+    
+    if (addDriver === 'true') {
+      setFormData({
+        ...formData,
+        role: 'driver'
+      });
+      setIsAddOpen(true);
+    }
+    
+    if (editDriver) {
+      const driver = users.find(user => user._id === editDriver);
+      if (driver) {
+        setSelectedUser(driver);
+        setIsEditOpen(true);
+      }
+    }
+  }, [searchParams, users, setFormData, formData, setIsAddOpen, setSelectedUser, setIsEditOpen]);
+  
+  return null;
+}
+
+function UsersPageContent() {
   const dispatch = useAppDispatch();
   const { loading, error, success, users } = useAppSelector((state) => state.user);
-  const searchParams = useSearchParams();
   
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -128,27 +169,7 @@ export default function UsersPage() {
     }
   }, [success, dispatch, isAddOpen, isEditOpen]);
 
-  // Handle query parameters for adding or editing drivers
-  useEffect(() => {
-    const addDriver = searchParams.get('addDriver');
-    const editDriver = searchParams.get('editDriver');
-    
-    if (addDriver === 'true') {
-      setFormData({
-        ...formData,
-        role: 'driver'
-      });
-      setIsAddOpen(true);
-    }
-    
-    if (editDriver) {
-      const driver = users.find(user => user._id === editDriver);
-      if (driver) {
-        setSelectedUser(driver);
-        setIsEditOpen(true);
-      }
-    }
-  }, [searchParams, users]);
+
 
   const handleEdit = (user: any) => {
     setSelectedUser(user);
@@ -247,6 +268,16 @@ export default function UsersPage() {
 
   return (
     <div className="container mx-auto">
+      <Suspense fallback={<div>Loading...</div>}>
+        <SearchParamsHandler
+          users={users}
+          setFormData={setFormData}
+          formData={formData}
+          setIsAddOpen={setIsAddOpen}
+          setSelectedUser={setSelectedUser}
+          setIsEditOpen={setIsEditOpen}
+        />
+      </Suspense>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">Kullanıcı Yönetimi</h1>
@@ -594,4 +625,12 @@ export default function UsersPage() {
       </Dialog>
     </div>
   );
-} 
+}
+
+export default function UsersPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <UsersPageContent />
+    </Suspense>
+  );
+}
