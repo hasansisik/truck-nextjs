@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
-import { getAllDrivers } from "@/redux/actions/userActions";
+import { getAllDrivers, register, clearError } from "@/redux/actions/userActions";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -11,20 +11,108 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { FileText, Clock, Car } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function DriversPage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { drivers, loading } = useAppSelector((state) => state.user);
+  const { drivers, loading, error: userError, success: userSuccess } = useAppSelector((state) => state.user);
+  
+  const [isDriverOpen, setIsDriverOpen] = useState(false);
+  const [driverForm, setDriverForm] = useState({
+    name: "",
+    username: "",
+    password: "",
+    role: "driver",
+    license: "",
+    experience: 0,
+  });
   
   useEffect(() => {
     dispatch(getAllDrivers());
   }, [dispatch]);
 
+  // Reset driver form data when modal closes
+  useEffect(() => {
+    if (!isDriverOpen) {
+      resetDriverForm();
+      dispatch(clearError());
+    }
+  }, [isDriverOpen, dispatch]);
+
+  // Handle driver form success
+  useEffect(() => {
+    if (userSuccess && isDriverOpen) {
+      setIsDriverOpen(false);
+      resetDriverForm();
+      toast.success("Şoför başarıyla eklendi");
+      // Refresh drivers list
+      dispatch(getAllDrivers());
+    }
+  }, [userSuccess, isDriverOpen, dispatch]);
+
   const handleAddDriver = () => {
-    router.push("/users?addDriver=true");
+    setIsDriverOpen(true);
+  };
+
+  const resetDriverForm = () => {
+    setDriverForm({
+      name: "",
+      username: "",
+      password: "",
+      role: "driver",
+      license: "",
+      experience: 0,
+    });
+  };
+
+  const handleDriverInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setDriverForm({ 
+      ...driverForm, 
+      [name]: name === 'experience' ? parseInt(value) || 0 : value 
+    });
+  };
+
+  const handleDriverSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate that username is provided
+    if (!driverForm.username) {
+      toast.error("Kullanıcı adı gereklidir.");
+      return;
+    }
+    
+    const driverInfo = driverForm.role === 'driver' ? {
+      license: driverForm.license,
+      experience: driverForm.experience
+    } : undefined;
+    
+    dispatch(register({
+      name: driverForm.name,
+      username: driverForm.username,
+      password: driverForm.password,
+      role: driverForm.role,
+      ...(driverInfo && { license: driverInfo.license, experience: driverInfo.experience })
+    }));
   };
 
   const getStatusBadge = (status: string) => {
@@ -126,6 +214,100 @@ export default function DriversPage() {
           </Button>
         </div>
       )}
+
+      {/* Driver Registration Dialog */}
+      <Dialog open={isDriverOpen} onOpenChange={setIsDriverOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Yeni Şoför Ekle</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleDriverSubmit} className="space-y-4 py-4">
+            {userError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+                {userError}
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="driverName">Ad Soyad</Label>
+              <Input
+                id="driverName"
+                name="name"
+                value={driverForm.name}
+                onChange={handleDriverInputChange}
+                placeholder="Şoför adını girin"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="driverUsername">Kullanıcı Adı</Label>
+              <Input
+                id="driverUsername"
+                name="username"
+                value={driverForm.username}
+                onChange={handleDriverInputChange}
+                placeholder="Şoför kullanıcı adını girin"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="driverPassword">Şifre</Label>
+              <Input
+                id="driverPassword"
+                name="password"
+                type="password"
+                value={driverForm.password}
+                onChange={handleDriverInputChange}
+                placeholder="Şoför şifresini girin"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="driverRole">Rol</Label>
+              <Select onValueChange={(value) => setDriverForm({ ...driverForm, role: value })} value={driverForm.role} required>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Şoför rolünü seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="driver">Şoför</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="superadmin">Süper Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {driverForm.role === 'driver' && (
+              <div className="space-y-4 border-l-2 border-gray-200 pl-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="driverLicense">Ehliyet No</Label>
+                  <Input
+                    id="driverLicense"
+                    name="license"
+                    value={driverForm.license}
+                    onChange={handleDriverInputChange}
+                    placeholder="Şoför ehliyet numarasını girin"
+                    required={driverForm.role === 'driver'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="driverExperience">Deneyim (Yıl)</Label>
+                  <Input
+                    id="driverExperience"
+                    name="experience"
+                    type="number"
+                    min="0"
+                    value={driverForm.experience}
+                    onChange={handleDriverInputChange}
+                    placeholder="Şoför deneyimini girin"
+                    required={driverForm.role === 'driver'}
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button type="submit" className="w-full">Kaydet</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

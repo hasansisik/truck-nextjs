@@ -81,25 +81,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
         {
           title: "Araç Yönetimi",
-          url: "/vehicles",
+          url: "/araclar",
           icon: IconTruck,
           roles: ["user", "admin", "superadmin"], // All roles can access
         },
         {
           title: "Şoför Yönetimi",
-          url: "/drivers",
+          url: "/soforler",
           icon: IconUsers,
           roles: ["user", "admin", "superadmin"], // All roles can access
         },
         {
           title: "Firma Yönetimi",
-          url: "/companies",
+          url: "/sirketler",
           icon: IconBuilding,
           roles: ["user", "admin", "superadmin"], // All roles can access
         },
         {
           title: "Kullanıcılar",
-          url: "/users",
+          url: "/kullanici",
           icon: IconUserPlus,
           roles: ["admin", "superadmin"], // Only admin and superadmin can manage users
         },
