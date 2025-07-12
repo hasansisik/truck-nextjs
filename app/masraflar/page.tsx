@@ -18,9 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Edit, Eye, Plus, X, Search, Filter } from "lucide-react";
+import { Edit, Eye, Plus, X, Search, Filter, Download } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { deleteExpense, getAllExpenses } from "@/redux/actions/expenseActions";
+import * as XLSX from 'xlsx';
 import { 
   Dialog,
   DialogContent,
@@ -32,6 +33,7 @@ import DeleteConfirmation from "@/components/delete-confirmation";
 import { formatDateTimeTR, formatDateTR } from "@/lib/utils";
 import { ExpenseForm } from "@/components/expense-form";
 import { ExpenseDetail } from "@/components/expense-detail";
+import { toast } from "sonner";
 
 
 export default function ExpensesPage() {
@@ -163,6 +165,60 @@ export default function ExpensesPage() {
 
   const hasActiveFilters = searchTerm || selectedName || selectedDateRange;
 
+  // Export to Excel function
+  const handleExportToExcel = () => {
+    if (!filteredExpenses || filteredExpenses.length === 0) {
+      toast.error("Dışa aktarılacak veri bulunamadı");
+      return;
+    }
+
+    try {
+      // Prepare data for Excel export
+      const exportData = filteredExpenses.map((expense: any, index: number) => ({
+        'Sıra No': index + 1,
+        'Masraf Adı': expense.name || '',
+        'Açıklama': expense.description || '',
+        'Tarih': expense.date ? new Date(expense.date).toLocaleDateString('tr-TR') : '',
+        'Saat': expense.date ? new Date(expense.date).toLocaleTimeString('tr-TR') : '',
+        'Tutar (₺)': expense.amount || 0,
+        'Oluşturan': expense.userId?.name || 'Bilinmiyor',
+        'Kayıt Tarihi': expense.createdAt ? new Date(expense.createdAt).toLocaleDateString('tr-TR') : ''
+      }));
+
+      // Create workbook and worksheet
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Masraf Kayıtları');
+      
+      // Auto-size columns
+      const colWidths = [
+        { wch: 8 },  // Sıra No
+        { wch: 25 }, // Masraf Adı
+        { wch: 40 }, // Açıklama
+        { wch: 15 }, // Tarih
+        { wch: 15 }, // Saat
+        { wch: 15 }, // Tutar
+        { wch: 20 }, // Oluşturan
+        { wch: 15 }  // Kayıt Tarihi
+      ];
+      ws['!cols'] = colWidths;
+      
+      // Generate filename with current date
+      const currentDate = new Date().toLocaleDateString('tr-TR').replace(/\./g, '-');
+      const filename = `masraf-kayitlari-${currentDate}.xlsx`;
+      
+      // Save file
+      XLSX.writeFile(wb, filename);
+      
+      toast.success("Excel dosyası başarıyla indirildi");
+    } catch (error) {
+      console.error("Excel export error:", error);
+      toast.error("Excel dosyası oluşturulurken bir hata oluştu");
+    }
+  };
+
   return (
     <div className="container mx-auto ">
       <div className="flex justify-between items-center mb-6">
@@ -172,10 +228,20 @@ export default function ExpensesPage() {
             Masraf kayıtlarınızı bu sayfadan yönetebilirsiniz.
           </p>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Yeni Masraf
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleExportToExcel}
+            disabled={!filteredExpenses || filteredExpenses.length === 0 || loading}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Excel'e Aktar
+          </Button>
+          <Button onClick={() => setIsCreateOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Yeni Masraf
+          </Button>
+        </div>
       </div>
 
       {/* Search and Filter Section */}

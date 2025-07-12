@@ -37,7 +37,7 @@ export function LoginForm({
     }
 
     try {
-      const result = await dispatch(login({ emailOrUsername: username, password }))
+      const result = await dispatch(login({ username, password }))
       
       if (login.fulfilled.match(result)) {
         toast.success("Giriş başarılı!")

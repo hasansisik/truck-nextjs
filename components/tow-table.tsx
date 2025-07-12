@@ -318,22 +318,19 @@ export function TowTable({ filteredTows: propFilteredTows }: TowTableProps = {})
               <TableHead>Mesafe (km)</TableHead>
               <TableHead>Hizmet Bedeli (₺)</TableHead>
               <TableHead>Firma</TableHead>
-              {(user?.role === 'admin' || user?.role === 'superadmin') && (
-                <TableHead>Oluşturan</TableHead>
-              )}
               <TableHead className="text-right">İşlemler</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={user?.role === 'admin' || user?.role === 'superadmin' ? 10 : 9} className="text-center py-4">
+                <TableCell colSpan={9} className="text-center py-4">
                   Yükleniyor...
                 </TableCell>
               </TableRow>
             ) : filteredTows?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={user?.role === 'admin' || user?.role === 'superadmin' ? 10 : 9} className="text-center py-4">
+                <TableCell colSpan={9} className="text-center py-4">
                   {hasActiveFilters ? "Arama ve filtre kriterlerinize uygun kayıt bulunamadı" : "Kayıt bulunamadı"}
                 </TableCell>
               </TableRow>
@@ -370,9 +367,6 @@ export function TowTable({ filteredTows: propFilteredTows }: TowTableProps = {})
                   <TableCell>{tow.distance}</TableCell>
                   <TableCell>{tow.serviceFee ? `${tow.serviceFee.toFixed(2)} ₺` : '-'}</TableCell>
                   <TableCell>{tow.company}</TableCell>
-                  {(user?.role === 'admin' || user?.role === 'superadmin') && (
-                    <TableCell>{tow.userId?.name || 'Bilinmiyor'}</TableCell>
-                  )}
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button

@@ -44,13 +44,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Check if user is a driver
   const isDriver = user?.role === "driver";
   
-  // If user is a driver, only show the Çekici Yönetimi page
+  // If user is a driver, show Çekici Yönetimi and Teklif Bekleyen Çekimler
   const allNavItems = isDriver 
     ? [
         {
-          title: "Çekici Yönetimi",
+          title: "Anasayfa",
           url: "/",
           icon: IconTruckDelivery,
+          roles: ["driver"],
+        },
+        {
+          title: "Teklif Bekleyen Çekimler",
+          url: "/teklif-cekici",
+          icon: IconReceipt,
           roles: ["driver"],
         }
       ]

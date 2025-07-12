@@ -200,6 +200,12 @@ function UsersPageContent() {
       return;
     }
     
+    // Validate username format
+    if (formData.username.length < 3) {
+      toast.error("Kullanıcı adı en az 3 karakter olmalıdır.");
+      return;
+    }
+    
     const driverInfo = formData.role === 'driver' ? {
       license: formData.license,
       experience: formData.experience
@@ -221,6 +227,12 @@ function UsersPageContent() {
     // Validate that username is provided
     if (!editFormData.username) {
       toast.error("Kullanıcı adı gereklidir.");
+      return;
+    }
+    
+    // Validate username format
+    if (editFormData.username.length < 3) {
+      toast.error("Kullanıcı adı en az 3 karakter olmalıdır.");
       return;
     }
 
@@ -408,13 +420,14 @@ function UsersPageContent() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="username">Kullanıcı Adı</Label>
+              <Label htmlFor="username">Kullanıcı Adı <span className="text-red-500">*</span></Label>
               <Input
                 id="username"
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
                 required
+                placeholder="Benzersiz kullanıcı adı girin"
               />
             </div>
             <div className="space-y-2">
@@ -507,13 +520,14 @@ function UsersPageContent() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-username">Kullanıcı Adı</Label>
+              <Label htmlFor="edit-username">Kullanıcı Adı <span className="text-red-500">*</span></Label>
               <Input
                 id="edit-username"
                 name="username"
                 value={editFormData.username}
                 onChange={handleEditInputChange}
                 required
+                placeholder="Benzersiz kullanıcı adı girin"
               />
             </div>
             <div className="space-y-2">

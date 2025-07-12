@@ -25,13 +25,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Truck, Users, Building } from "lucide-react";
+import { Truck, Users, Building, Download } from "lucide-react";
 import { toast } from "sonner";
 import { safeLocalStorage } from "@/lib/utils";
 import axios from "axios";
 import { server } from "@/config";
 import { logout } from "@/redux/actions/userActions";
 import { useRouter } from "next/navigation";
+import * as XLSX from 'xlsx';
 
 export default function TeklifCekiciPage() {
   const dispatch = useAppDispatch();
@@ -245,6 +246,64 @@ export default function TeklifCekiciPage() {
     setIsDriverOpen(true);
   };
 
+  // Export to Excel function
+  const handleExportToExcel = () => {
+    if (!towsWithoutServiceFee || towsWithoutServiceFee.length === 0) {
+      toast.error("Dışa aktarılacak veri bulunamadı");
+      return;
+    }
+
+    try {
+      // Prepare data for Excel export
+      const exportData = towsWithoutServiceFee.map((tow: any, index: number) => ({
+        'Sıra No': index + 1,
+        'Çeken Araç': tow.towTruck || '',
+        'Şoför': tow.driver || '',
+        'Plaka': tow.licensePlate || '',
+        'Çekilme Tarihi': tow.towDate ? new Date(tow.towDate).toLocaleDateString('tr-TR') : '',
+        'Çekilme Saati': tow.towDate ? new Date(tow.towDate).toLocaleTimeString('tr-TR') : '',
+        'Mesafe (km)': tow.distance || 0,
+        'Hizmet Bedeli (₺)': tow.serviceFee || 0,
+        'Firma': tow.company || '',
+        'Kayıt Tarihi': tow.createdAt ? new Date(tow.createdAt).toLocaleDateString('tr-TR') : ''
+      }));
+
+      // Create workbook and worksheet
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Teklif Bekleyen Çekimler');
+      
+      // Auto-size columns
+      const colWidths = [
+        { wch: 8 },  // Sıra No
+        { wch: 20 }, // Çeken Araç
+        { wch: 20 }, // Şoför
+        { wch: 15 }, // Plaka
+        { wch: 15 }, // Çekilme Tarihi
+        { wch: 15 }, // Çekilme Saati
+        { wch: 12 }, // Mesafe
+        { wch: 18 }, // Hizmet Bedeli
+        { wch: 25 }, // Firma
+        { wch: 15 }  // Kayıt Tarihi
+      ];
+      ws['!cols'] = colWidths;
+      
+      // Generate filename with current date
+      const currentDate = new Date().toLocaleDateString('tr-TR').replace(/\./g, '-');
+      const filename = `teklif-bekleyen-cekimler-${currentDate}.xlsx`;
+      
+      // Save file
+      XLSX.writeFile(wb, filename);
+      
+      toast.success("Excel dosyası başarıyla indirildi");
+    } catch (error) {
+      console.error("Excel export error:", error);
+      toast.error("Excel dosyası oluşturulurken bir hata oluştu");
+    }
+  };
+
   // Show loading or redirect based on auth check
   if (isAuthChecking) {
     return (
@@ -273,40 +332,54 @@ export default function TeklifCekiciPage() {
           Toplam {towsWithoutServiceFee.length} adet teklif bekleyen çekim bulunmaktadır.
         </div>
         
-        {/* Only show quick add buttons if user is not a driver */}
-        {!isDriver && (
-          <div className="flex flex-wrap gap-3 mt-4">
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="flex items-center gap-2"
-              onClick={() => setIsVehicleOpen(true)}
-            >
-              <Truck className="h-4 w-4" />
-              <span>Araç Ekle</span>
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="flex items-center gap-2"
-              onClick={handleAddDriver}
-            >
-              <Users className="h-4 w-4" />
-              <span>Şoför Ekle</span>
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="flex items-center gap-2"
-              onClick={() => setIsCompanyOpen(true)}
-            >
-              <Building className="h-4 w-4" />
-              <span>Firma Ekle</span>
-            </Button>
-          </div>
-        )}
+        <div className="flex flex-wrap gap-3 mt-4">
+          {/* Export button - show for all users */}
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={handleExportToExcel}
+            disabled={!towsWithoutServiceFee || towsWithoutServiceFee.length === 0}
+          >
+            <Download className="h-4 w-4" />
+            <span>Excel'e Aktar</span>
+          </Button>
+          
+          {/* Only show quick add buttons if user is not a driver */}
+          {!isDriver && (
+            <>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="flex items-center gap-2"
+                onClick={() => setIsVehicleOpen(true)}
+              >
+                <Truck className="h-4 w-4" />
+                <span>Araç Ekle</span>
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="flex items-center gap-2"
+                onClick={handleAddDriver}
+              >
+                <Users className="h-4 w-4" />
+                <span>Şoför Ekle</span>
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="flex items-center gap-2"
+                onClick={() => setIsCompanyOpen(true)}
+              >
+                <Building className="h-4 w-4" />
+                <span>Firma Ekle</span>
+              </Button>
+            </>
+          )}
+        </div>
       </div>
       
       <TowTable filteredTows={towsWithoutServiceFee} />

@@ -7,13 +7,12 @@ import { safeLocalStorage, handleApiError, showSuccess, showPermissionDenied } f
 export const clearError = createAction('user/clearError');
 
 export interface LoginPayload {
-  emailOrUsername: string;
+  username: string;
   password: string;
 }
 
 export interface RegisterPayload {
   name: string;
-  email?: string;
   username: string;
   password: string;
   role?: string;
@@ -25,13 +24,12 @@ export interface RegisterPayload {
 
 export interface RegisterUserPayload {
   name: string;
-  email: string;
+  username: string;
   password: string;
 }
 
 export interface EditProfilePayload {
   name?: string;
-  email?: string;
   companyId?: string;
   currentPassword?: string;
   newPassword?: string;
@@ -40,7 +38,6 @@ export interface EditProfilePayload {
 export interface EditUserPayload {
   userId: string;
   name?: string;
-  email?: string;
   username?: string;
   password?: string;
   role?: string;
@@ -51,20 +48,7 @@ export interface EditUserPayload {
   experience?: number;
 }
 
-export interface ForgotPasswordPayload {
-  email: string;
-}
 
-export interface ResetPasswordPayload {
-  token: string;
-  email: string;
-  password: string;
-}
-
-export interface VerifyEmailPayload {
-  email: string;
-  verificationCode: string;
-}
 
 // Premium durumunu güncelleme
 export const setPremiumStatus = createAsyncThunk(
@@ -89,86 +73,7 @@ export const setPremiumStatus = createAsyncThunk(
   }
 );
 
-// Kullanıcı kayıt işlemi (normal kullanıcılar için)
-export const registerUser = createAsyncThunk(
-  "user/registerUser",
-  async (payload: RegisterUserPayload, thunkAPI) => {
-    try {
-      const { data } = await axios.post(`${server}/auth/register-user`, payload);
-      showSuccess("Kayıt başarılı", "Lütfen e-posta adresinizi doğrulayın.");
-      return data;
-    } catch (error: any) {
-      handleApiError(error, 'Kullanıcı kaydı yapılamadı', true);
-      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Kullanıcı kaydı yapılamadı');
-    }
-  }
-);
 
-// Şifremi unuttum işlemi
-export const forgotPassword = createAsyncThunk(
-  "user/forgotPassword",
-  async (payload: ForgotPasswordPayload, thunkAPI) => {
-    try {
-      const { data } = await axios.post(`${server}/auth/forgot-password`, payload);
-      showSuccess("Şifre sıfırlama bağlantısı gönderildi", "Lütfen e-posta kutunuzu kontrol edin.");
-      return data;
-    } catch (error: any) {
-      handleApiError(error, 'Şifre sıfırlama isteği gönderilemedi', true);
-      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Şifre sıfırlama isteği gönderilemedi');
-    }
-  }
-);
-
-// Şifre sıfırlama işlemi
-export const resetPassword = createAsyncThunk(
-  "user/resetPassword",
-  async (payload: ResetPasswordPayload, thunkAPI) => {
-    try {
-      const { data } = await axios.post(`${server}/auth/reset-password`, payload);
-      showSuccess("Şifreniz başarıyla sıfırlandı", "Şimdi giriş yapabilirsiniz.");
-      return data;
-    } catch (error: any) {
-      handleApiError(error, 'Şifre sıfırlanamadı', true);
-      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Şifre sıfırlanamadı');
-    }
-  }
-);
-
-// Email doğrulama işlemi
-export const verifyEmail = createAsyncThunk(
-  "user/verifyEmail",
-  async (payload: VerifyEmailPayload, thunkAPI) => {
-    try {
-      // Eğer verificationCode bir dizi ise birleştir
-      let code = payload.verificationCode;
-      
-      const { data } = await axios.post(`${server}/auth/verify-email`, {
-        email: payload.email,
-        verificationCode: code
-      });
-      showSuccess("E-posta adresiniz başarıyla doğrulandı", "Şimdi giriş yapabilirsiniz.");
-      return data;
-    } catch (error: any) {
-      handleApiError(error, 'Email doğrulanamadı', true);
-      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Email doğrulanamadı');
-    }
-  }
-);
-
-// Doğrulama kodunu tekrar gönderme
-export const resendVerificationCode = createAsyncThunk(
-  "user/resendVerificationCode",
-  async (email: string, thunkAPI) => {
-    try {
-      const { data } = await axios.post(`${server}/auth/again-email`, { email });
-      showSuccess("Doğrulama kodu gönderildi", "Lütfen e-posta kutunuzu kontrol edin.");
-      return data;
-    } catch (error: any) {
-      handleApiError(error, 'Doğrulama kodu gönderilemedi', true);
-      return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Doğrulama kodu gönderilemedi');
-    }
-  }
-);
 
 export const login = createAsyncThunk(
   "user/login",
@@ -187,7 +92,7 @@ export const login = createAsyncThunk(
       
       // Convert technical error messages to user-friendly ones
       if (message === 'Unauthorized' || message === 'Invalid credentials' || error.response?.status === 401) {
-        message = 'E-posta adresiniz veya şifreniz hatalı. Lütfen tekrar deneyin.';
+        message = 'Kullanıcı adınız veya şifreniz hatalı. Lütfen tekrar deneyin.';
       }
       
       handleApiError(error, message, true);

@@ -98,7 +98,7 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link href="/users">
+                <Link href="/kullanici">
                   <IconUserPlus className="mr-2 h-4 w-4" />
                   Kullanıcılar
                 </Link>

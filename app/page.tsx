@@ -395,7 +395,6 @@ export default function HomePage() {
             </div>
           </div>
           
-          {!isDriver && (
             <div className="mt-4 md:mt-0">
               <Button 
                 onClick={handleAddTow} 
@@ -405,7 +404,6 @@ export default function HomePage() {
                 Yeni Çekme Kaydı
               </Button>
             </div>
-          )}
         </div>
       </div>
       
