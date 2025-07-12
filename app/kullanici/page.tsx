@@ -87,7 +87,6 @@ function UsersPageContent() {
   
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
     username: "",
     password: "",
     role: "driver",
@@ -97,7 +96,6 @@ function UsersPageContent() {
 
   const [editFormData, setEditFormData] = useState({
     name: "",
-    email: "",
     username: "",
     password: "",
     role: "",
@@ -116,7 +114,6 @@ function UsersPageContent() {
     if (!isAddOpen) {
       setFormData({
         name: "",
-        email: "",
         username: "",
         password: "",
         role: "driver",
@@ -132,7 +129,6 @@ function UsersPageContent() {
     if (!isEditOpen) {
       setEditFormData({
         name: "",
-        email: "",
         username: "",
         password: "",
         role: "",
@@ -149,7 +145,6 @@ function UsersPageContent() {
     if (selectedUser) {
       setEditFormData({
         name: selectedUser.name || "",
-        email: selectedUser.email || "",
         username: selectedUser.username || "",
         password: "",
         role: selectedUser.role || "",
@@ -199,9 +194,9 @@ function UsersPageContent() {
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate that at least email or username is provided
-    if (!formData.email && !formData.username) {
-      toast.error("E-posta veya kullanıcı adı gereklidir.");
+    // Validate that username is provided
+    if (!formData.username) {
+      toast.error("Kullanıcı adı gereklidir.");
       return;
     }
     
@@ -212,7 +207,6 @@ function UsersPageContent() {
     
     dispatch(register({
       name: formData.name,
-      email: formData.email,
       username: formData.username,
       password: formData.password,
       role: formData.role,
@@ -224,16 +218,15 @@ function UsersPageContent() {
     e.preventDefault();
     if (!selectedUser) return;
     
-    // Validate that at least email or username is provided
-    if (!editFormData.email && !editFormData.username) {
-      toast.error("E-posta veya kullanıcı adı gereklidir.");
+    // Validate that username is provided
+    if (!editFormData.username) {
+      toast.error("Kullanıcı adı gereklidir.");
       return;
     }
 
     const userData: any = {
       userId: selectedUser._id,
       name: editFormData.name,
-      email: editFormData.email,
       username: editFormData.username,
       role: editFormData.role,
       status: editFormData.status
@@ -297,7 +290,6 @@ function UsersPageContent() {
             <TableRow>
               <TableHead>Kullanıcı</TableHead>
               <TableHead>Kullanıcı Adı</TableHead>
-              <TableHead>E-posta</TableHead>
               <TableHead>Rol</TableHead>
               <TableHead>Durum</TableHead>
               <TableHead className="text-right">İşlemler</TableHead>
@@ -306,7 +298,7 @@ function UsersPageContent() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10">
+                <TableCell colSpan={5} className="text-center py-10">
                   Yükleniyor...
                 </TableCell>
               </TableRow>
@@ -340,7 +332,6 @@ function UsersPageContent() {
                     </div>
                   </TableCell>
                   <TableCell>{user.username || "-"}</TableCell>
-                  <TableCell>{user.email}</TableCell>
                   <TableCell>{getRoleBadge(user.role)}</TableCell>
                   <TableCell>
                     {user.status === "active" ? (
@@ -385,7 +376,7 @@ function UsersPageContent() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10">
+                <TableCell colSpan={5} className="text-center py-10">
                   Henüz kullanıcı bulunmuyor.
                 </TableCell>
               </TableRow>
@@ -423,17 +414,7 @@ function UsersPageContent() {
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
-              />
-              <p className="text-xs text-gray-500">E-posta veya kullanıcı adından en az biri gereklidir.</p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">E-posta</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange}
+                required
               />
             </div>
             <div className="space-y-2">
@@ -532,17 +513,7 @@ function UsersPageContent() {
                 name="username"
                 value={editFormData.username}
                 onChange={handleEditInputChange}
-              />
-              <p className="text-xs text-gray-500">E-posta veya kullanıcı adından en az biri gereklidir.</p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-email">E-posta</Label>
-              <Input
-                id="edit-email"
-                name="email"
-                type="email"
-                value={editFormData.email}
-                onChange={handleEditInputChange}
+                required
               />
             </div>
             <div className="space-y-2">

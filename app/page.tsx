@@ -67,7 +67,6 @@ export default function HomePage() {
 
   const [driverForm, setDriverForm] = useState({
     name: "",
-    email: "",
     username: "",
     password: "",
     role: "driver",
@@ -182,7 +181,6 @@ export default function HomePage() {
   const resetDriverForm = () => {
     setDriverForm({
       name: "",
-      email: "",
       username: "",
       password: "",
       role: "driver",
@@ -220,9 +218,9 @@ export default function HomePage() {
   const handleDriverSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate that at least email or username is provided
-    if (!driverForm.email && !driverForm.username) {
-      toast.error("E-posta veya kullanıcı adı gereklidir.");
+    // Validate that username is provided
+    if (!driverForm.username) {
+      toast.error("Kullanıcı adı gereklidir.");
       return;
     }
     
@@ -233,7 +231,6 @@ export default function HomePage() {
     
     dispatch(register({
       name: driverForm.name,
-      email: driverForm.email,
       username: driverForm.username,
       password: driverForm.password,
       role: driverForm.role,
@@ -767,18 +764,6 @@ export default function HomePage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="driverEmail">E-posta</Label>
-              <Input
-                id="driverEmail"
-                name="email"
-                type="email"
-                value={driverForm.email}
-                onChange={handleDriverInputChange}
-                placeholder="Şoför e-posta adresini girin"
-                required
-              />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="driverUsername">Kullanıcı Adı</Label>
               <Input
                 id="driverUsername"
@@ -786,6 +771,7 @@ export default function HomePage() {
                 value={driverForm.username}
                 onChange={handleDriverInputChange}
                 placeholder="Şoför kullanıcı adını girin"
+                required
               />
             </div>
             <div className="space-y-2">

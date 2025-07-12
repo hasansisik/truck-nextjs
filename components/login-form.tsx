@@ -21,7 +21,7 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [emailOrUsername, setEmailOrUsername] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   
   const dispatch = useAppDispatch()
@@ -31,13 +31,13 @@ export function LoginForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!emailOrUsername || !password) {
-      toast.error("Lütfen e-posta adresinizi veya kullanıcı adınızı ve şifrenizi girin")
+    if (!username || !password) {
+      toast.error("Lütfen kullanıcı adınızı ve şifrenizi girin")
       return
     }
 
     try {
-      const result = await dispatch(login({ emailOrUsername, password }))
+      const result = await dispatch(login({ emailOrUsername: username, password }))
       
       if (login.fulfilled.match(result)) {
         toast.success("Giriş başarılı!")
@@ -56,7 +56,7 @@ export function LoginForm({
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Hoş Geldiniz</CardTitle>
           <CardDescription>
-            E-posta veya kullanıcı adınız ile giriş yapın
+            Kullanıcı adınız ile giriş yapın
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -64,13 +64,13 @@ export function LoginForm({
             <div className="grid gap-6">
               <div className="grid gap-6">
                 <div className="grid gap-3">
-                  <Label htmlFor="emailOrUsername">E-posta veya Kullanıcı Adı</Label>
+                  <Label htmlFor="username">Kullanıcı Adı</Label>
                   <Input
-                    id="emailOrUsername"
+                    id="username"
                     type="text"
-                    placeholder="ornek@eposta.com veya kullanıcıadı"
-                    value={emailOrUsername}
-                    onChange={(e) => setEmailOrUsername(e.target.value)}
+                    placeholder="kullanıcıadı"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     required
                     disabled={loading}
                   />
