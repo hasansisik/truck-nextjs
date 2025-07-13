@@ -87,10 +87,18 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
 
   // Initialize form with default values
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: (values, context, options) => {
+      // Eğer kullanıcı şoför ise ve driver alanı boş ise, otomatik olarak doldur
+      if (isCurrentUserDriver && user?.name && !values.driver) {
+        values.driver = user.name;
+      }
+      
+      // Standart zod resolver'ı çağır
+      return zodResolver(formSchema)(values, context, options);
+    },
     defaultValues: {
       towTruck: "",
-      driver: "",
+      driver: isCurrentUserDriver && user?.name ? user.name : "",
       licensePlate: "",
       towDate: new Date(),
       distance: 0,
@@ -156,6 +164,11 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
       setIsSubmitting(true);
       setImageError(null);
       
+      // Eğer kullanıcı şoför ise, driver alanını kullanıcı adıyla doldur
+      if (isCurrentUserDriver && user?.name) {
+        data.driver = user.name;
+      }
+      
       if (tow) {
         await dispatch(updateTow({
           id: tow._id,
@@ -183,7 +196,13 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={(e) => {
+        // Eğer kullanıcı şoför ise, driver alanını kullanıcı adıyla doldur
+        if (isCurrentUserDriver && user?.name) {
+          form.setValue("driver", user.name);
+        }
+        return form.handleSubmit(onSubmit)(e);
+      }} className="space-y-6">
         {error && (
           <div className="bg-destructive/15 p-3 rounded-md text-destructive mb-4 text-sm">
             {error === "Request failed with status code 404" 
@@ -206,7 +225,7 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
                 >
                   <FormControl>
                     <SelectTrigger className="w-full h-10">
-                      <SelectValue placeholder="Seçiniz" />
+                      <SelectValue placeholder="Araç Seçiniz" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -238,7 +257,7 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
                 >
                   <FormControl>
                     <SelectTrigger className="w-full h-10">
-                      <SelectValue placeholder="Seçiniz" />
+                      <SelectValue placeholder={isCurrentUserDriver ? user?.name : "Seçiniz"} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -252,7 +271,7 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
                     </SelectGroup>
                   </SelectContent>
                 </Select>
-                <FormMessage className="text-xs" />
+                {!isCurrentUserDriver && <FormMessage className="text-xs" />}
               </FormItem>
             )}
           />
@@ -377,7 +396,7 @@ export function TowForm({ tow, onSuccess }: TowFormProps) {
               >
                 <FormControl>
                   <SelectTrigger className="w-full h-10">
-                    <SelectValue placeholder="Seçiniz" />
+                    <SelectValue placeholder="Firma Seçiniz" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
