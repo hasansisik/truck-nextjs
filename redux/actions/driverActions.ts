@@ -57,7 +57,6 @@ export const createDriver = createAsyncThunk(
         experience: typeof payload.experience === 'string' ? parseInt(payload.experience) || 0 : payload.experience
       };
       
-      console.log("Creating driver with payload:", processedPayload);
       const { data } = await axios.post(`${server}/drivers`, processedPayload, {
         headers: {
           Authorization: `Bearer ${token}`,

@@ -50,13 +50,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {
           title: "Anasayfa",
           url: "/",
-          icon: IconTruckDelivery,
+          icon: IconReport,
           roles: ["driver"],
         },
         {
-          title: "Teklif Bekleyen Çekimler",
-          url: "/teklif-cekici",
-          icon: IconReceipt,
+          title: "Çekici Yönetimi",
+          url: "/cekici",
+          icon: IconTruckDelivery,
           roles: ["driver"],
         }
       ]

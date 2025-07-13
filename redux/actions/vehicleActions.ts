@@ -73,7 +73,6 @@ export const createVehicle = createAsyncThunk(
         plateNumber: payload.licensePlate
       };
       
-      console.log("Creating vehicle with payload:", processedPayload);
       const { data } = await axios.post(`${server}/vehicles`, processedPayload, {
         headers: {
           Authorization: `Bearer ${token}`,
